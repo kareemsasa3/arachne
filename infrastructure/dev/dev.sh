@@ -4,6 +4,28 @@ set -euo pipefail
 # Development script for the arachne stack
 # This script starts the services in development mode with live reloading
 
+measure_shutdown() {
+    echo ""
+    echo "📏 Measuring SIGTERM shutdown times..."
+    mapfile -t containers < <(docker ps --format "{{.Names}}")
+    if [ ${#containers[@]} -eq 0 ]; then
+        echo "  • No running containers to observe."
+        return
+    fi
+
+    for c in "${containers[@]}"; do
+        echo "  • Observing $c"
+        ts_start=$(date +%s)
+        while docker ps --format "{{.Names}}" | grep -q "^${c}$"; do
+            sleep 0.2
+        done
+        ts_end=$(date +%s)
+        echo "    - Exited after $((ts_end - ts_start)) seconds"
+    done
+}
+
+trap 'measure_shutdown' INT
+
 echo "🚀 Starting arachne stack in DEVELOPMENT mode..."
 echo "   This will start all services with live reloading enabled"
 echo ""
@@ -19,7 +41,10 @@ fi
 # Stop any existing containers
 echo "🛑 Stopping any existing containers..."
 echo "   This ensures a clean start and prevents port conflicts"
+start_stop_ts=$(date +%s)
 cd .. && docker compose down
+end_stop_ts=$(date +%s)
+echo "⏱️ Shutdown duration: $((end_stop_ts - start_stop_ts)) seconds"
 
 # Start in development mode
 echo ""
