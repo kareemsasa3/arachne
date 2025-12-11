@@ -27,8 +27,8 @@ We've successfully implemented a complete **enterprise-grade CI/CD pipeline** fo
 
 1. **Lint & Test**: Runs in parallel for all services
    - **workfolio**: Node.js linting and testing
-   - **ai-backend**: Node.js linting and testing  
-   - **arachne-ui**: Next.js linting and placeholder smoke tests
+   - **ai**: Node.js linting and testing  
+   - **web**: Next.js linting and placeholder smoke tests
    - **arachne**: Go vet and testing
 
 2. **Build Images**: Verifies all Docker images can be built successfully
@@ -134,8 +134,8 @@ The CI/CD pipeline uses these environment variables for image selection:
 ### Service Health Checks
 All services include health checks to ensure they're running correctly:
 - **workfolio**: HTTP health check on port 3000
-- **ai-backend**: HTTP health check on port 3001
-- **arachne-ui**: HTTP health check on port 3000 (Next.js console served via /arachne)
+- **ai**: HTTP health check on port 3001
+- **web**: HTTP health check on port 3000 (Next.js console served via /arachne)
 - **arachne**: HTTP health check on port 8080
 - **nginx**: HTTP health check on port 80
 - **redis**: Redis ping command

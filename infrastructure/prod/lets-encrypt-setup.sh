@@ -112,7 +112,7 @@ update_configurations() {
     sed -i.bak "s/your-email@example.com/$EMAIL/g" "$INFRA_DIR/prod/docker-compose.prod.yml" || true
     sed -i.bak "s/your-domain.com/$DOMAIN/g" "$INFRA_DIR/prod/docker-compose.prod.yml"
     # Update Workfolio VITE url if present
-    sed -i.bak "s|VITE_AI_BACKEND_URL=https://your-domain.com/api/ai|VITE_AI_BACKEND_URL=https://$DOMAIN/api/ai|g" "$INFRA_DIR/prod/docker-compose.prod.yml" || true
+    sed -i.bak "s|VITE_AI_URL=https://your-domain.com/api/ai|VITE_AI_URL=https://$DOMAIN/api/ai|g" "$INFRA_DIR/prod/docker-compose.prod.yml" || true
     
     print_status "Configuration files updated"
     print_info "Backup files created with .bak extension"

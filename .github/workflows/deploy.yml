@@ -78,10 +78,10 @@ jobs:
           ln -sf ../.env .env
           echo "\$GHCR_TOKEN" | docker login ghcr.io -u "\$GHCR_USERNAME" --password-stdin
           export WORKFOLIO_IMAGE=ghcr.io/\${REPO}/workfolio:\${SHA}
-          export AI_BACKEND_IMAGE=ghcr.io/\${REPO}/ai-backend:\${SHA}
-          export ARACHNE_IMAGE=ghcr.io/\${REPO}/arachne:\${SHA}
-          export ARACHNE_UI_IMAGE=ghcr.io/\${REPO}/arachne-ui:\${SHA}
-          export ARACHNE_CPU_LIMIT=1.0
+          export AI_IMAGE=ghcr.io/\${REPO}/ai:\${SHA}
+          export SCRAPER_IMAGE=ghcr.io/\${REPO}/scraper:\${SHA}
+          export WEB_IMAGE=ghcr.io/\${REPO}/web:\${SHA}
+          export SCRAPER_CPU_LIMIT=1.0
           # Ensure external prod network exists (idempotent)
           docker network create portfolio-network-prod >/dev/null 2>&1 || true
           # Bring down current prod stack (if any) to avoid port/cpu conflicts
@@ -98,7 +98,7 @@ jobs:
           # Ensure external prod network exists (again) right before up
           docker network create portfolio-network-prod >/dev/null 2>&1 || true
           # Bring up services with fresh images, remove orphans, and force recreate (app + monitoring)
-          docker compose --env-file ../.env -f docker-compose.prod.yml -f docker-compose.monitoring.prod.yml up -d --pull always --remove-orphans --force-recreate nginx workfolio arachne-ui ai-backend arachne prometheus grafana grafana-admin node-exporter nginx-exporter redis-exporter
+          docker compose --env-file ../.env -f docker-compose.prod.yml -f docker-compose.monitoring.prod.yml up -d --pull always --remove-orphans --force-recreate nginx workfolio web ai scraper prometheus grafana grafana-admin node-exporter nginx-exporter redis-exporter
           EOSSH
 
       - name: Verify monitoring health (via SSH)

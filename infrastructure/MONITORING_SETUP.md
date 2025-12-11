@@ -155,7 +155,7 @@ Create custom dashboards for:
 
 - Place JSON files in `infrastructure/monitoring/grafana/dashboards/` (Grafana auto-loads)
 - Custom stubs included:
-  - `custom/ai-backend.json`
+  - `custom/ai.json`
   - `custom/arachne.json`
 - Fetch recommended dashboards:
   ```bash

@@ -123,40 +123,40 @@ else
     print_warning "Workfolio service directory not found"
 fi
 
-if [ -d "services/ai-backend" ]; then
-    print_success "AI Backend service directory found"
+if [ -d "services/ai" ]; then
+    print_success "AI service directory found"
     
-    if [ -f "services/ai-backend/package.json" ]; then
-        print_success "AI Backend package.json found"
+    if [ -f "services/ai/package.json" ]; then
+        print_success "AI package.json found"
     else
-        print_warning "AI Backend package.json not found"
+        print_warning "AI package.json not found"
     fi
     
-    if [ -f "services/ai-backend/Dockerfile" ]; then
-        print_success "AI Backend Dockerfile found"
+    if [ -f "services/ai/Dockerfile" ]; then
+        print_success "AI Dockerfile found"
     else
-        print_warning "AI Backend Dockerfile not found"
+        print_warning "AI Dockerfile not found"
     fi
 else
-    print_warning "AI Backend service directory not found"
+    print_warning "AI service directory not found"
 fi
 
-if [ -d "services/arachne" ]; then
-    print_success "Arachne service directory found"
+if [ -d "services/scraper" ]; then
+    print_success "Scraper service directory found"
     
-    if [ -f "services/arachne/go.mod" ]; then
-        print_success "Arachne go.mod found"
+    if [ -f "services/scraper/go.mod" ]; then
+        print_success "Scraper go.mod found"
     else
-        print_warning "Arachne go.mod not found"
+        print_warning "Scraper go.mod not found"
     fi
     
-    if [ -f "services/arachne/Dockerfile" ]; then
-        print_success "Arachne Dockerfile found"
+    if [ -f "services/scraper/Dockerfile" ]; then
+        print_success "Scraper Dockerfile found"
     else
-        print_warning "Arachne Dockerfile not found"
+        print_warning "Scraper Dockerfile not found"
     fi
 else
-    print_warning "Arachne service directory not found"
+    print_warning "Scraper service directory not found"
 fi
 
 # Check for required scripts in package.json files
@@ -183,7 +183,7 @@ check_package_scripts() {
 }
 
 check_package_scripts "workfolio" "Workfolio"
-check_package_scripts "services/ai-backend" "AI Backend"
+check_package_scripts "services/ai" "AI"
 
 # Check Docker build capability
 echo ""

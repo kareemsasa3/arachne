@@ -32,9 +32,8 @@ help:
 # Install deps on host (required once before dev)
 install:
 	@echo "📦 Installing dependencies on host..."
-	cd ../services/ai-backend && npm install
-	cd ../services/workfolio && npm install
-	cd ../services/arachne-ui && npm install
+	cd ../services/ai && npm install
+	cd ../services/web && npm install
 	@echo "✅ Dependencies installed"
 
 # Start dev stack

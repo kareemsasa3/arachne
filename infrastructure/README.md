@@ -40,8 +40,8 @@ cd dev && ./dev.sh
 - Access the stack at: `http://localhost`.
 - Dev proxy routes:
   - Frontend (Workfolio): `/` → `workfolio:80`
-  - AI Backend: `/api/ai/*` → `ai-backend:3001`
-  - Arachne: `/api/scrape/*` and `/api/arachne/*` → `arachne:8080`
+  - AI: `/api/ai/*` → `ai:3001`
+  - Scraper: `/api/scrape/*` and `/api/arachne/*` → `scraper:8080`
 
 ### Production Environment
 ```bash
@@ -67,9 +67,9 @@ Before starting the dev stack, install dependencies on the host for each JS serv
 
 ```bash
 # From the project root
-cd services/ai-backend && npm install
+cd services/ai && npm install
 cd ../workfolio && npm install
-cd ../arachne-ui && npm install
+cd ../web && npm install
 ```
 
 This writes `node_modules` directly to your host filesystem. The containers bind-mount
@@ -109,9 +109,9 @@ This eliminates EACCES permission errors and keeps the setup simple:
 
 ### Core Services
 - **Workfolio**: React frontend application
-- **AI Backend**: Node.js AI microservice
-- **Arachne**: Go web scraping service
-- **Redis**: Data storage for Arachne
+- **AI**: Node.js AI microservice
+- **Scraper**: Go web scraping service
+- **Redis**: Data storage for Scraper
 - **Nginx**: Reverse proxy and load balancer
 
 ### Optional Services
@@ -160,7 +160,7 @@ docker compose -f docker-compose.yml -f prod/docker-compose.prod.yml ps
 docker compose -f docker-compose.yml -f prod/docker-compose.prod.yml down
 
 # Scale services
-docker compose -f docker-compose.yml -f prod/docker-compose.prod.yml up -d --scale ai-backend=2
+docker compose -f docker-compose.yml -f prod/docker-compose.prod.yml up -d --scale ai=2
 ```
 
 ## ⚙️ Configuration

@@ -1,0 +1,96 @@
+<svg
+  xmlns="http://www.w3.org/2000/svg"
+  viewBox="0 0 420 120"
+  role="img"
+  aria-labelledby="title desc"
+>
+  <title id="title">Arachne logo</title>
+  <desc id="desc">
+    Futuristic wordmark logo for Arachne with a minimal spider web motif
+  </desc>
+
+  <defs>
+    <!-- Gradient for the text -->
+    <linearGradient id="arachneGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#4F46E5" />
+      <stop offset="50%" stop-color="#EC4899" />
+      <stop offset="100%" stop-color="#22D3EE" />
+    </linearGradient>
+
+    <!-- Soft glow -->
+    <filter id="arachneGlow" x="-20%" y="-20%" width="140%" height="140%">
+      <feGaussianBlur stdDeviation="4" result="blur" />
+      <feMerge>
+        <feMergeNode in="blur" />
+        <feMergeNode in="SourceGraphic" />
+      </feMerge>
+    </filter>
+
+    <!-- Font + base styles -->
+    <style>
+      @import url('https://fonts.googleapis.com/css2?family=Oxanium:wght@600;700&display=swap');
+
+      .arachne-text {
+        font-family: 'Oxanium', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+        font-weight: 700;
+        letter-spacing: 0.12em;
+        text-transform: uppercase;
+      }
+
+      .arachne-web-line {
+        stroke: #4F46E5;
+        stroke-width: 1.2;
+        stroke-linecap: round;
+      }
+
+      .arachne-web-arc {
+        fill: none;
+        stroke: #6B21A8;
+        stroke-width: 1;
+        stroke-linecap: round;
+        stroke-dasharray: 4 6;
+      }
+    </style>
+  </defs>
+
+  <!-- Transparent background to keep layout stable -->
+  <rect width="100%" height="100%" fill="transparent" />
+
+  <!-- Wordmark -->
+  <g filter="url(#arachneGlow)">
+    <text
+      x="50%"
+      y="54%"
+      text-anchor="middle"
+      class="arachne-text"
+      fill="url(#arachneGradient)"
+      font-size="42"
+    >
+      Arachne
+    </text>
+  </g>
+
+  <!-- Minimal spider-web geometry under the text -->
+  <g transform="translate(0,10)">
+    <!-- Radial “legs” -->
+    <g class="arachne-web-line" opacity="0.8">
+      <line x1="80" y1="70" x2="40" y2="105" />
+      <line x1="130" y1="70" x2="110" y2="112" />
+      <line x1="210" y1="70" x2="210" y2="115" />
+      <line x1="290" y1="70" x2="310" y2="112" />
+      <line x1="340" y1="70" x2="380" y2="105" />
+    </g>
+
+    <!-- Concentric arcs (web rings) -->
+    <path
+      class="arachne-web-arc"
+      d="M60,98 Q210,60 360,98"
+      opacity="0.7"
+    />
+    <path
+      class="arachne-web-arc"
+      d="M75,110 Q210,78 345,110"
+      opacity="0.45"
+    />
+  </g>
+</svg>

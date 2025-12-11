@@ -8,48 +8,31 @@
 
 services:
   # AI Backend - Node.js with nodemon hot reload
-  ai-backend:
-    container_name: portfolio-ai-backend-dev
+  ai:
+    container_name: portfolio-ai-dev
     build:
-      context: ../services/ai-backend
+      context: ../services/ai
       dockerfile: Dockerfile.dev
     environment:
       - NODE_ENV=development
       - PORT=3001
       - GEMINI_API_KEY=${GEMINI_API_KEY}
-      - ARACHNE_URL=http://arachne:8080
-      - ARACHNE_API_TOKEN=${ARACHNE_API_TOKEN:-}
+      - SCRAPER_URL=http://scraper:8080
+      - SCRAPER_API_TOKEN=${SCRAPER_API_TOKEN:-}
       - PROFILE_CONTEXT_PATH=/app/profile/profile.md
     volumes:
-      - ../services/ai-backend:/app:rw
+      - ../services/ai:/app:rw
       - ../profile/profile.md:/app/profile/profile.md:ro
-      - ai-backend-node_modules:/app/node_modules
+      - ai-node_modules:/app/node_modules
     command: sh -c "npm install && npm run dev"
     ports:
       - "3001:3001"
 
-  # Workfolio - Vite dev server with HMR
-  workfolio:
-    container_name: portfolio-workfolio-dev
-    build:
-      context: ../services/workfolio
-      dockerfile: Dockerfile.dev
-    environment:
-      - NODE_ENV=development
-      - VITE_AI_BACKEND_URL=/api/ai
-      - VITE_HMR_CLIENT_PORT=80
-    volumes:
-      - ../services/workfolio:/app:rw
-      - workfolio-node_modules:/app/node_modules
-    command: sh -c "npm install && npm run dev -- --host"
-    ports:
-      - "3000:3000"
-
   # Arachne - Go with Air hot reload
-  arachne:
-    container_name: portfolio-arachne-dev
+  scraper:
+    container_name: portfolio-scraper-dev
     build:
-      context: ../services/arachne
+      context: ../services/scraper
       dockerfile: ../../infrastructure/dev/arachne.Dockerfile
     environment:
       - SCRAPER_REDIS_ADDR=redis:6379
@@ -64,7 +47,7 @@ services:
       - SCRAPER_MAX_CONTENT_BYTES=200000
       - SCRAPER_HEADLESS_NO_SANDBOX=true
     volumes:
-      - ../services/arachne:/app:rw
+      - ../services/scraper:/app:rw
       # Path relative to CWD (infrastructure/), not to this file
       - ./dev/arachne.air.toml:/etc/air/air.toml:ro
     command: air -c /etc/air/air.toml
@@ -73,26 +56,26 @@ services:
       - "8080:8080"
 
   # Arachne UI - Next.js dev server with Turbopack
-  arachne-ui:
-    container_name: portfolio-arachne-ui-dev
+  web:
+    container_name: portfolio-web-dev
     build:
-      context: ../services/arachne-ui
+      context: ../services/web
       dockerfile: Dockerfile.dev
     environment:
       - NODE_ENV=development
       - PORT=3002
       # Server-side URLs (internal Docker network)
-      - AI_BACKEND_URL=http://ai-backend:3001
-      - ARACHNE_API_URL=http://arachne:8080
+      - AI_URL=http://ai:3001
+      - SCRAPER_API_URL=http://scraper:8080
       # Client-side URL (browser goes through nginx)
-      - NEXT_PUBLIC_ARACHNE_API_URL=/api/arachne
+      - NEXT_PUBLIC_SCRAPER_API_URL=/api/arachne
     volumes:
-      - ../services/arachne-ui:/app:rw
-      - arachne-ui-node_modules:/app/node_modules
+      - ../services/web:/app:rw
+      - web-node_modules:/app/node_modules
     command: sh -c "npm install && npm run dev -- --hostname 0.0.0.0 --port 3002"
     depends_on:
-      - ai-backend
-      - arachne
+      - ai
+      - scraper
     ports:
       - "3002:3002"
 
@@ -110,12 +93,10 @@ services:
     ports:
       - "80:80"
     depends_on:
-      - workfolio
-      - ai-backend
-      - arachne
-      - arachne-ui
+      - ai
+      - scraper
+      - web
 
 volumes:
-  ai-backend-node_modules:
-  workfolio-node_modules:
-  arachne-ui-node_modules:
+  ai-node_modules:
+  web-node_modules:

@@ -10,9 +10,8 @@ set -euo pipefail
 # PREREQUISITES:
 #   1. Docker and Docker Compose installed
 #   2. Node.js dependencies installed on host (run once):
-#      cd services/ai-backend && npm install
-#      cd ../workfolio && npm install
-#      cd ../arachne-ui && npm install
+#      cd services/ai && npm install
+#      cd ../web && npm install
 #
 # USAGE:
 #   ./dev.sh              # Start dev stack
@@ -20,8 +19,7 @@ set -euo pipefail
 #   ./dev.sh --clean      # Clean restart (removes volumes)
 #
 # ACCESS:
-#   http://localhost/          → Workfolio (main portfolio)
-#   http://localhost/arachne/  → Arachne UI (scraper dashboard)
+#   http://localhost/   → Arachne UI (scraper dashboard)
 #
 # =============================================================================
 
@@ -41,23 +39,19 @@ echo -e "${GREEN}━━━━━━━━━━━━━━━━━━━━━
 check_deps() {
     local missing=()
     
-    if ! [ -d "../services/ai-backend/node_modules" ]; then
-        missing+=("ai-backend")
+    if ! [ -d "../services/ai/node_modules" ]; then
+        missing+=("ai")
     fi
-    if ! [ -d "../services/workfolio/node_modules" ]; then
-        missing+=("workfolio")
-    fi
-    if ! [ -d "../services/arachne-ui/node_modules" ]; then
-        missing+=("arachne-ui")
+    if ! [ -d "../services/web/node_modules" ]; then
+        missing+=("web")
     fi
     
     if [ ${#missing[@]} -ne 0 ]; then
         echo -e "${YELLOW}⚠ Missing node_modules in: ${missing[*]}${NC}"
         echo ""
         echo "Run these commands first:"
-        echo "  cd services/ai-backend && npm install"
-        echo "  cd ../workfolio && npm install"
-        echo "  cd ../arachne-ui && npm install"
+        echo "  cd services/ai && npm install"
+        echo "  cd ../web && npm install"
         echo ""
         read -p "Continue anyway? [y/N] " -n 1 -r
         echo

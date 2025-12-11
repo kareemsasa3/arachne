@@ -15,58 +15,46 @@ services:
       - ./logs/nginx:/var/log/nginx
       - ./nginx/conf.d/default.conf.template:/tmp/default.conf.template:ro
     depends_on:
-      - workfolio
-      - ai-backend
-      - arachne
-      - arachne-ui
+      - ai
+      - scraper
+      - web
     restart: unless-stopped
     command: >
       /bin/sh -c "sed 's/__DOMAIN_NAME__/'\"$DOMAIN_NAME\"'/g' /tmp/default.conf.template > /tmp/default.conf && nginx -g 'daemon off;'"
     networks:
       - ${DOCKER_NETWORK_NAME:-portfolio-network}
 
-  # Workfolio - Main portfolio application
-  workfolio:
-    image: ${WORKFOLIO_IMAGE:-ghcr.io/your-username/personal-website/workfolio:latest}
-    container_name: portfolio-workfolio
+  # Web Console - Scraper console
+  web:
+    image: ${WEB_IMAGE:-ghcr.io/your-username/personal-website/web:latest}
+    container_name: portfolio-web
     environment:
-      - NODE_ENV=${WORKFOLIO_NODE_ENV:-production}
-      - VITE_AI_BACKEND_URL=${VITE_AI_BACKEND_URL:-/api/ai}
-    restart: unless-stopped
-    networks:
-      - ${DOCKER_NETWORK_NAME:-portfolio-network}
-
-  # Arachne UI - Scraper console
-  arachne-ui:
-    image: ${ARACHNE_UI_IMAGE:-ghcr.io/your-username/personal-website/arachne-ui:latest}
-    container_name: portfolio-arachne-ui
-    environment:
-      - NODE_ENV=${ARACHNE_UI_NODE_ENV:-production}
-      - PORT=${ARACHNE_UI_PORT:-3000}
-      - AI_BACKEND_URL=${AI_BACKEND_URL:-http://ai-backend:3001}
-      - ARACHNE_API_URL=${ARACHNE_API_URL:-http://arachne:8080}
-      - NEXT_PUBLIC_ARACHNE_API_URL=${NEXT_PUBLIC_ARACHNE_API_URL:-http://arachne:8080}
+      - NODE_ENV=${WEB_NODE_ENV:-production}
+      - PORT=${WEB_PORT:-3000}
+      - AI_URL=${AI_URL:-http://ai:3001}
+      - SCRAPER_API_URL=${SCRAPER_API_URL:-http://scraper:8080}
+      - NEXT_PUBLIC_SCRAPER_API_URL=${NEXT_PUBLIC_SCRAPER_API_URL:-http://scraper:8080}
     depends_on:
-      - ai-backend
-      - arachne
+      - ai
+      - scraper
     restart: unless-stopped
     networks:
       - ${DOCKER_NETWORK_NAME:-portfolio-network}
 
-  # AI Backend - AI microservice
-  ai-backend:
-    image: ${AI_BACKEND_IMAGE:-ghcr.io/your-username/personal-website/ai-backend:latest}
-    container_name: portfolio-ai-backend
+  # AI service - AI microservice
+  ai:
+    image: ${AI_IMAGE:-ghcr.io/your-username/personal-website/ai:latest}
+    container_name: portfolio-ai
     environment:
-      - NODE_ENV=${AI_BACKEND_NODE_ENV:-production}
-      - PORT=${AI_BACKEND_PORT:-3001}
+      - NODE_ENV=${AI_NODE_ENV:-production}
+      - PORT=${AI_PORT:-3001}
       - GEMINI_API_KEY=${GEMINI_API_KEY}
-      - LOG_LEVEL=${AI_BACKEND_LOG_LEVEL:-info}
-      - ENABLE_METRICS=${AI_BACKEND_ENABLE_METRICS:-true}
-      - RATE_LIMIT_WINDOW_MS=${AI_BACKEND_RATE_LIMIT_WINDOW_MS:-900000}
-      - RATE_LIMIT_MAX_REQUESTS=${AI_BACKEND_RATE_LIMIT_MAX_REQUESTS:-100}
-      - ARACHNE_URL=${ARACHNE_URL:-http://arachne:8080}
-      - ARACHNE_API_TOKEN=${ARACHNE_API_TOKEN:-}
+      - LOG_LEVEL=${AI_LOG_LEVEL:-info}
+      - ENABLE_METRICS=${AI_ENABLE_METRICS:-true}
+      - RATE_LIMIT_WINDOW_MS=${AI_RATE_LIMIT_WINDOW_MS:-900000}
+      - RATE_LIMIT_MAX_REQUESTS=${AI_RATE_LIMIT_MAX_REQUESTS:-100}
+      - SCRAPER_URL=${SCRAPER_URL:-http://scraper:8080}
+      - SCRAPER_API_TOKEN=${SCRAPER_API_TOKEN:-}
       - PROFILE_CONTEXT_PATH=/app/profile/profile.md
     restart: unless-stopped
     networks:
@@ -86,23 +74,23 @@ services:
       retries: 3
       start_period: 40s
 
-  # Arachne - Web scraping service
-  arachne:
-    image: ${ARACHNE_IMAGE:-ghcr.io/your-username/personal-website/arachne:latest}
-    container_name: portfolio-arachne
+  # Scraper - Web scraping service
+  scraper:
+    image: ${SCRAPER_IMAGE:-ghcr.io/your-username/personal-website/scraper:latest}
+    container_name: portfolio-scraper
     environment:
-      - SCRAPER_REDIS_ADDR=${ARACHNE_REDIS_ADDR:-redis:6379}
-      - SCRAPER_REDIS_DB=${ARACHNE_REDIS_DB:-0}
-      - SCRAPER_ENABLE_METRICS=${ARACHNE_ENABLE_METRICS:-true}
-      - SCRAPER_ENABLE_LOGGING=${ARACHNE_ENABLE_LOGGING:-true}
-      - SCRAPER_LOG_LEVEL=${ARACHNE_LOG_LEVEL:-info}
-      - SCRAPER_MAX_CONCURRENT=${ARACHNE_MAX_CONCURRENT:-5}
-      - SCRAPER_REQUEST_TIMEOUT=${ARACHNE_REQUEST_TIMEOUT:-120s}
-      - SCRAPER_TOTAL_TIMEOUT=${ARACHNE_TOTAL_TIMEOUT:-180s}
-      - SCRAPER_USE_HEADLESS=${ARACHNE_USE_HEADLESS:-true}
-      - SCRAPER_USER_AGENT=${ARACHNE_USER_AGENT:-Mozilla/5.0 (compatible; PortfolioBot/1.0)}
-      - SCRAPER_RATE_LIMIT=${ARACHNE_RATE_LIMIT:-2}
-      - SCRAPER_RATE_LIMIT_WINDOW=${ARACHNE_RATE_LIMIT_WINDOW:-1s}
+      - SCRAPER_REDIS_ADDR=${SCRAPER_REDIS_ADDR:-redis:6379}
+      - SCRAPER_REDIS_DB=${SCRAPER_REDIS_DB:-0}
+      - SCRAPER_ENABLE_METRICS=${SCRAPER_ENABLE_METRICS:-true}
+      - SCRAPER_ENABLE_LOGGING=${SCRAPER_ENABLE_LOGGING:-true}
+      - SCRAPER_LOG_LEVEL=${SCRAPER_LOG_LEVEL:-info}
+      - SCRAPER_MAX_CONCURRENT=${SCRAPER_MAX_CONCURRENT:-5}
+      - SCRAPER_REQUEST_TIMEOUT=${SCRAPER_REQUEST_TIMEOUT:-120s}
+      - SCRAPER_TOTAL_TIMEOUT=${SCRAPER_TOTAL_TIMEOUT:-180s}
+      - SCRAPER_USE_HEADLESS=${SCRAPER_USE_HEADLESS:-true}
+      - SCRAPER_USER_AGENT=${SCRAPER_USER_AGENT:-Mozilla/5.0 (compatible; PortfolioBot/1.0)}
+      - SCRAPER_RATE_LIMIT=${SCRAPER_RATE_LIMIT:-2}
+      - SCRAPER_RATE_LIMIT_WINDOW=${SCRAPER_RATE_LIMIT_WINDOW:-1s}
     depends_on:
       redis:
         condition: service_healthy

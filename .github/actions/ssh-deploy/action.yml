@@ -104,7 +104,7 @@ runs:
         trap 'rm -rf "$DOCKER_CONFIG_DIR"' EXIT
 
         export WORKFOLIO_IMAGE=ghcr.io/${{ inputs.repository }}/workfolio:${{ inputs.sha }}
-        export AI_BACKEND_IMAGE=ghcr.io/${{ inputs.repository }}/ai-backend:${{ inputs.sha }}
+        export AI_BACKEND_IMAGE=ghcr.io/${{ inputs.repository }}/ai:${{ inputs.sha }}
         export ARACHNE_IMAGE=ghcr.io/${{ inputs.repository }}/arachne:${{ inputs.sha }}
 
         # Note: rely on compose pull/up --pull always; no manual docker pull here
@@ -159,7 +159,7 @@ runs:
           workfolio:
             build: null
             image: ${WORKFOLIO_IMAGE}
-          ai-backend:
+          ai:
             build: null
             image: ${AI_BACKEND_IMAGE}
           arachne:
@@ -178,7 +178,7 @@ runs:
         # Bring stack down with same overrides to prevent name conflicts and stale containers
         $COMPOSE_CMD -f infrastructure/docker-compose.yml -f infrastructure/prod/docker-compose.prod.yml -f /tmp/compose.images.override.yml -f /tmp/compose.network.override.yml down --remove-orphans || true
         # Extra safety: remove any lingering conflicting containers by explicit names
-        docker rm -f portfolio-redis-prod portfolio-workfolio-prod portfolio-ai-backend-prod portfolio-arachne-prod >/dev/null 2>&1 || true
+        docker rm -f portfolio-redis-prod portfolio-workfolio-prod portfolio-ai-prod portfolio-arachne-prod >/dev/null 2>&1 || true
         # And remove any container matching portfolio-*-prod just in case
         CONFLICTING_CONTAINERS=$(docker ps -aq --filter name='^/portfolio-.*-prod$' || true)
         if [ -n "$CONFLICTING_CONTAINERS" ]; then

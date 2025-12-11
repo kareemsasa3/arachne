@@ -21,9 +21,9 @@ scrape_configs:
     scrape_interval: 10s
 
   # AI Backend - Node.js service
-  - job_name: 'ai-backend'
+  - job_name: 'ai'
     static_configs:
-      - targets: ['ai-backend:3001']
+      - targets: ['ai:3001']
     metrics_path: '/metrics'
     scrape_interval: 10s
 
@@ -44,11 +44,3 @@ scrape_configs:
     static_configs:
       - targets: ['node-exporter:9100']
     scrape_interval: 15s
-
-  # Workfolio - Frontend application (if it exposes metrics)
-  - job_name: 'workfolio'
-    static_configs:
-      - targets: ['workfolio:3000']
-    metrics_path: '/metrics'
-    scrape_interval: 30s
-    scrape_timeout: 10s 
