@@ -25,6 +25,10 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
         # No fetch-depth needed as we get the SHA from the workflow_run event
+        with:
+          fetch-depth: 0
+          submodules: recursive
+          token: ${{ secrets.SUBMODULE_TOKEN }}
 
       # The composite action now handles all SSH and deployment logic.
       # The old "Configure SSH" and "Set image tags env" steps are no longer needed.
