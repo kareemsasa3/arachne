@@ -46,6 +46,10 @@ cd .. && docker compose down
 end_stop_ts=$(date +%s)
 echo "⏱️ Shutdown duration: $((end_stop_ts - start_stop_ts)) seconds"
 
+# Export host UID/GID so containers can write with your user ownership
+export HOST_UID=${HOST_UID:-$(id -u)}
+export HOST_GID=${HOST_GID:-$(id -g)}
+
 # Start in development mode
 echo ""
 echo "🔧 Starting development stack with live reloading..."

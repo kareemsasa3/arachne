@@ -44,6 +44,9 @@ export default function HistoryPage() {
   const [isRescrapingId, setIsRescrapingId] = useState<string | null>(null);
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [expandedSummaries, setExpandedSummaries] = useState<Set<string>>(new Set());
+  const [generatingIds, setGeneratingIds] = useState<Set<string>>(new Set());
+  const [savingIds, setSavingIds] = useState<Set<string>>(new Set());
+  const [failedSaveIds, setFailedSaveIds] = useState<Set<string>>(new Set());
   const panelClass =
     'rounded-lg border border-white/10 bg-white/5 shadow-sm backdrop-blur-sm supports-[backdrop-filter]:backdrop-blur-sm';
 
@@ -198,6 +201,112 @@ export default function HistoryPage() {
     }
   };
 
+  const saveSummary = async (snapshotId: string, summary: string) => {
+    setSavingIds((prev) => {
+      const next = new Set(prev);
+      next.add(snapshotId);
+      return next;
+    });
+    try {
+      const scraperUrl = process.env.NEXT_PUBLIC_SCRAPER_API_URL || 'http://localhost:8080';
+      const token = process.env.NEXT_PUBLIC_SCRAPER_API_TOKEN;
+      const headers: Record<string, string> = { 'Content-Type': 'application/json' };
+      if (token) headers['Authorization'] = `Bearer ${token}`;
+
+      const resp = await fetch(`${scraperUrl}/memory/snapshot/${snapshotId}/summary`, {
+        method: 'PATCH',
+        headers,
+        body: JSON.stringify({ summary }),
+      });
+      if (!resp.ok) {
+        const msg = await resp.text();
+        throw new Error(msg || `Save failed (${resp.status})`);
+      }
+      setFailedSaveIds((prev) => {
+        const next = new Set(prev);
+        next.delete(snapshotId);
+        return next;
+      });
+    } finally {
+      setSavingIds((prev) => {
+        const next = new Set(prev);
+        next.delete(snapshotId);
+        return next;
+      });
+    }
+  };
+
+  const generateSummary = async (snapshot: Snapshot) => {
+    if (generatingIds.has(snapshot.id)) return;
+    setGeneratingIds((prev) => {
+      const next = new Set(prev);
+      next.add(snapshot.id);
+      return next;
+    });
+
+    try {
+      // Fetch full snapshot content for summarization
+      const detailResp = await fetch(
+        `${process.env.NEXT_PUBLIC_SCRAPER_API_URL || 'http://localhost:8080'}/memory/lookup?url=${encodeURIComponent(snapshot.url)}`,
+        { cache: 'no-store' }
+      );
+      if (!detailResp.ok) throw new Error('Failed to load snapshot content');
+      const detail = await detailResp.json();
+      const content =
+        detail?.snapshot?.clean_text ||
+        detail?.snapshot?.raw_html ||
+        detail?.snapshot?.content ||
+        '';
+      if (!content) throw new Error('No content available to summarize');
+
+      const aiResp = await fetch('/api/ai/summarize', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          content,
+          url: snapshot.url,
+          title: snapshot.title || '',
+        }),
+      });
+      if (!aiResp.ok) {
+        const err = await aiResp.json().catch(() => ({}));
+        throw new Error(err.error || `AI summarize failed (${aiResp.status})`);
+      }
+      const aiData = await aiResp.json();
+      const newSummary = aiData.summary || '';
+      if (!newSummary) throw new Error('Empty summary returned');
+
+      setSnapshots((prev) =>
+        prev.map((s) => (s.id === snapshot.id ? { ...s, summary: newSummary } : s))
+      );
+      if (selectedSnapshot && selectedSnapshot.id === snapshot.id) {
+        setSelectedSnapshot({ ...selectedSnapshot, summary: newSummary });
+      }
+
+      // Attempt to persist summary to scraper DB
+      try {
+        await saveSummary(snapshot.id, newSummary);
+      } catch (err) {
+        console.error('Save summary failed', err);
+        setFailedSaveIds((prev) => {
+          const next = new Set(prev);
+          next.add(snapshot.id);
+          return next;
+        });
+        alert(err instanceof Error ? err.message : 'Failed to save summary to memory');
+      }
+    } catch (err) {
+      console.error('Generate summary failed', err);
+      alert(err instanceof Error ? err.message : 'Failed to generate summary');
+    } finally {
+      setGeneratingIds((prev) => {
+        const next = new Set(prev);
+        next.delete(snapshot.id);
+        return next;
+      });
+    }
+  };
+
   const totalPages = Math.ceil(total / limit);
   const currentPage = Math.floor(offset / limit) + 1;
 
@@ -342,7 +451,7 @@ export default function HistoryPage() {
                   </div>
 
                   {/* AI Summary */}
-                  {snapshot.summary && (
+                  {snapshot.summary ? (
                     <div className="mb-3 mt-2">
                       <div className="flex items-start gap-2">
                         <svg className="w-4 h-4 text-purple-600 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -364,6 +473,43 @@ export default function HistoryPage() {
                           )}
                         </div>
                       </div>
+                      {failedSaveIds.has(snapshot.id) && (
+                        <div className="mt-2 flex items-center gap-2 text-xs text-red-200">
+                          <span>Save to memory failed.</span>
+                          <button
+                            onClick={() => saveSummary(snapshot.id, snapshot.summary || '')}
+                            disabled={savingIds.has(snapshot.id)}
+                            className="inline-flex items-center gap-1 px-2 py-1 rounded bg-red-500/20 border border-red-300/30 text-red-100 disabled:opacity-60"
+                          >
+                            {savingIds.has(snapshot.id) ? 'Retrying…' : 'Retry save'}
+                          </button>
+                        </div>
+                      )}
+                    </div>
+                  ) : (
+                    <div className="mb-3 mt-2">
+                      <button
+                        onClick={() => generateSummary(snapshot)}
+                        disabled={generatingIds.has(snapshot.id)}
+                        className="inline-flex items-center gap-2 px-3 py-1.5 bg-blue-500/20 hover:bg-blue-500/30 text-blue-100 rounded-lg transition-colors text-sm font-medium border border-blue-300/30 disabled:opacity-60 disabled:cursor-not-allowed"
+                      >
+                        {generatingIds.has(snapshot.id) ? (
+                          <>
+                            <svg className="animate-spin h-4 w-4 text-blue-200" viewBox="0 0 24 24" fill="none">
+                              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                              <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+                            </svg>
+                            Generating summary…
+                          </>
+                        ) : (
+                          <>
+                            <svg className="w-4 h-4 text-blue-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+                            </svg>
+                            Generate summary
+                          </>
+                        )}
+                      </button>
                     </div>
                   )}
 

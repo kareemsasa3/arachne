@@ -35,6 +35,7 @@ services:
     build:
       context: ../services/scraper
       dockerfile: ../../infrastructure/dev/arachne.Dockerfile
+    user: "${HOST_UID:-1000}:${HOST_GID:-1000}"
     environment:
       - SCRAPER_REDIS_ADDR=redis:6379
       - SCRAPER_REDIS_DB=0
@@ -47,6 +48,9 @@ services:
       - SCRAPER_USE_HEADLESS=true
       - SCRAPER_MAX_CONTENT_BYTES=200000
       - SCRAPER_HEADLESS_NO_SANDBOX=true
+      - GOMODCACHE=/app/.cache/gomod
+      - GOCACHE=/app/.cache/gocache
+      - GOPATH=/app/.cache/gopath
     volumes:
       - ../services/scraper:/app:rw
       # Path relative to CWD (infrastructure/), not to this file

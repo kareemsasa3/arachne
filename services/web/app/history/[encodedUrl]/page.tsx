@@ -89,6 +89,9 @@ export default function HistoryDetailPage() {
   const [selectedVersion, setSelectedVersion] = useState<VersionDetail | null>(null);
   const [isDetailLoading, setIsDetailLoading] = useState(false);
   const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [generatingIds, setGeneratingIds] = useState<Record<string, boolean>>({});
+  const [savingIds, setSavingIds] = useState<Record<string, boolean>>({});
+  const [failedSaveIds, setFailedSaveIds] = useState<Record<string, boolean>>({});
   const [versionViewMode, setVersionViewMode] = useState<'text' | 'preview'>('text');
   const panelClass =
     'rounded-lg border border-white/10 bg-white/5 shadow-sm backdrop-blur-sm supports-[backdrop-filter]:backdrop-blur-sm';
@@ -232,6 +235,99 @@ export default function HistoryDetailPage() {
         ...prev,
         [entryId]: { loading: false, error: err instanceof Error ? err.message : 'Failed to analyze changes' },
       }));
+    }
+  };
+
+  const saveSummary = async (entryId: string, summary: string) => {
+    setSavingIds((prev) => ({ ...prev, [entryId]: true }));
+    try {
+      const token = process.env.NEXT_PUBLIC_SCRAPER_API_TOKEN;
+      const headers: Record<string, string> = { 'Content-Type': 'application/json' };
+      if (token) headers['Authorization'] = `Bearer ${token}`;
+
+      const resp = await fetch(`${apiBase}/memory/snapshot/${entryId}/summary`, {
+        method: 'PATCH',
+        headers,
+        body: JSON.stringify({ summary }),
+      });
+      if (!resp.ok) {
+        const msg = await resp.text();
+        throw new Error(msg || `Save failed (${resp.status})`);
+      }
+      setFailedSaveIds((prev) => {
+        const next = { ...prev };
+        delete next[entryId];
+        return next;
+      });
+    } finally {
+      setSavingIds((prev) => {
+        const next = { ...prev };
+        delete next[entryId];
+        return next;
+      });
+    }
+  };
+
+  const generateSummary = async (entry: HistoryEntry | VersionDetail) => {
+    if (generatingIds[entry.id]) return;
+    setGeneratingIds((prev) => ({ ...prev, [entry.id]: true }));
+    try {
+      // Load full version content
+      let versionData: VersionDetail | null = null;
+      if (selectedVersion && selectedVersion.id === entry.id && (selectedVersion.clean_text || selectedVersion.raw_content)) {
+        versionData = selectedVersion;
+      } else {
+        const res = await fetch(`${apiBase}/memory/version/${entry.id}`, { cache: 'no-store' });
+        if (!res.ok) throw new Error(`Failed to load version (${res.status})`);
+        versionData = await res.json();
+      }
+
+      const content =
+        versionData?.clean_text ||
+        versionData?.raw_content ||
+        '';
+      if (!content) throw new Error('No content available to summarize');
+
+      const aiResp = await fetch('/api/ai/summarize', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          content,
+          url: entry.url,
+          title: entry.title || '',
+        }),
+      });
+      if (!aiResp.ok) {
+        const err = await aiResp.json().catch(() => ({}));
+        throw new Error(err.error || `AI summarize failed (${aiResp.status})`);
+      }
+      const aiData = await aiResp.json();
+      const newSummary = aiData.summary || '';
+      if (!newSummary) throw new Error('Empty summary returned');
+
+      setHistory((prev) =>
+        prev.map((h) => (h.id === entry.id ? { ...h, summary: newSummary } : h))
+      );
+      if (selectedVersion && selectedVersion.id === entry.id) {
+        setSelectedVersion({ ...selectedVersion, summary: newSummary });
+      }
+
+      try {
+        await saveSummary(entry.id, newSummary);
+      } catch (err) {
+        console.error('Save summary failed', err);
+        setFailedSaveIds((prev) => ({ ...prev, [entry.id]: true }));
+        alert(err instanceof Error ? err.message : 'Failed to save summary to memory');
+      }
+    } catch (err) {
+      console.error('Generate summary failed', err);
+      alert(err instanceof Error ? err.message : 'Failed to generate summary');
+    } finally {
+      setGeneratingIds((prev) => {
+        const next = { ...prev };
+        delete next[entry.id];
+        return next;
+      });
     }
   };
 
@@ -481,12 +577,49 @@ export default function HistoryDetailPage() {
                     </div>
                   )}
 
-                  {entry.summary && (
-                <div className="mt-3 bg-blue-500/10 border border-blue-200/40 rounded-lg p-3 text-sm text-white/90 backdrop-blur-sm supports-[backdrop-filter]:backdrop-blur-sm">
-                  <div className="font-medium text-blue-100 mb-1">Summary:</div>
-                  <div className="prose prose-sm text-white/90">
-                    <ReactMarkdown>{entry.summary}</ReactMarkdown>
-                  </div>
+                  {entry.summary ? (
+                    <div className="mt-3 bg-blue-500/10 border border-blue-200/40 rounded-lg p-3 text-sm text-white/90 backdrop-blur-sm supports-[backdrop-filter]:backdrop-blur-sm">
+                      <div className="font-medium text-blue-100 mb-1">Summary:</div>
+                      <div className="prose prose-sm text-white/90">
+                        <ReactMarkdown>{entry.summary}</ReactMarkdown>
+                      </div>
+                      {failedSaveIds[entry.id] && (
+                        <div className="mt-2 flex items-center gap-2 text-xs text-red-200">
+                          <span>Save to memory failed.</span>
+                          <button
+                            onClick={() => saveSummary(entry.id, entry.summary || '')}
+                            disabled={savingIds[entry.id]}
+                            className="inline-flex items-center gap-1 px-2 py-1 rounded bg-red-500/20 border border-red-300/30 text-red-100 disabled:opacity-60"
+                          >
+                            {savingIds[entry.id] ? 'Retrying…' : 'Retry save'}
+                          </button>
+                        </div>
+                      )}
+                    </div>
+                  ) : (
+                    <div className="mt-3">
+                      <button
+                        onClick={() => generateSummary(entry)}
+                        disabled={generatingIds[entry.id]}
+                        className="inline-flex items-center gap-2 px-3 py-1.5 bg-blue-500/20 hover:bg-blue-500/30 text-blue-100 rounded-lg transition-colors text-sm font-medium border border-blue-300/30 disabled:opacity-60 disabled:cursor-not-allowed"
+                      >
+                        {generatingIds[entry.id] ? (
+                          <>
+                            <svg className="animate-spin h-4 w-4 text-blue-200" viewBox="0 0 24 24" fill="none">
+                              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                              <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+                            </svg>
+                            Generating summary…
+                          </>
+                        ) : (
+                          <>
+                            <svg className="w-4 h-4 text-blue-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+                            </svg>
+                            Generate summary
+                          </>
+                        )}
+                      </button>
                     </div>
                   )}
 
@@ -565,13 +698,48 @@ export default function HistoryDetailPage() {
                 </div>
               </div>
 
-              {selectedVersion.summary && (
+              {selectedVersion.summary ? (
                 <div className="bg-blue-500/10 border border-blue-200/40 rounded p-3 text-sm text-white/90 backdrop-blur-sm supports-[backdrop-filter]:backdrop-blur-sm">
                   <div className="font-semibold text-blue-100 mb-1">Summary:</div>
                   <div className="prose prose-sm text-white/90">
                     <ReactMarkdown>{selectedVersion.summary}</ReactMarkdown>
                   </div>
+                  {failedSaveIds[selectedVersion.id] && (
+                    <div className="mt-2 flex items-center gap-2 text-xs text-red-200">
+                      <span>Save to memory failed.</span>
+                      <button
+                        onClick={() => saveSummary(selectedVersion.id, selectedVersion.summary || '')}
+                        disabled={savingIds[selectedVersion.id]}
+                        className="inline-flex items-center gap-1 px-2 py-1 rounded bg-red-500/20 border border-red-300/30 text-red-100 disabled:opacity-60"
+                      >
+                        {savingIds[selectedVersion.id] ? 'Retrying…' : 'Retry save'}
+                      </button>
+                    </div>
+                  )}
                 </div>
+              ) : (
+                <button
+                  onClick={() => generateSummary(selectedVersion)}
+                  disabled={generatingIds[selectedVersion.id]}
+                  className="inline-flex items-center gap-2 px-3 py-1.5 bg-blue-500/20 hover:bg-blue-500/30 text-blue-100 rounded-lg transition-colors text-sm font-medium border border-blue-300/30 disabled:opacity-60 disabled:cursor-not-allowed"
+                >
+                  {generatingIds[selectedVersion.id] ? (
+                    <>
+                      <svg className="animate-spin h-4 w-4 text-blue-200" viewBox="0 0 24 24" fill="none">
+                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+                      </svg>
+                      Generating summary…
+                    </>
+                  ) : (
+                    <>
+                      <svg className="w-4 h-4 text-blue-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+                      </svg>
+                      Generate summary
+                    </>
+                  )}
+                </button>
               )}
 
               {selectedVersion.change_summary && (
