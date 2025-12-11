@@ -1,33 +1,36 @@
-# Portfolio Ecosystem
+# Arachne - Autonomous Web Research Platform
 
-A unified Docker Compose setup for running the complete portfolio ecosystem with nginx as a reverse proxy.
+An autonomous research platform that searches, scrapes, indexes, and synthesizes web content using AI. Arachne continuously detects changes, keeps version history, and offers full-text search (FTS5) across collected documents.
 
 ## 🏗️ Architecture
 
 ### Folder Structure
 ```
-personal/
+arachne/
 ├── services/
-│   ├── ai/                      # AI microservice
-│   ├── scraper/                 # Web scraping service
-│   └── web/                     # Next.js scraper console
-├── infrastructure/              # Deployment & infrastructure
-│   ├── nginx/                   # Reverse proxy configuration
-│   ├── docker-compose.yml       # Production setup
-│   ├── docker-compose.dev.yml   # Development setup
-│   └── dev.sh                   # Development script
+│   ├── ai/                      # AI microservice (git submodule - nexus)
+│   ├── scraper/                 # Standalone scraping engine (git submodule)
+│   └── web/                     # Next.js Arachne web interface (in repo)
+├── infrastructure/              # Deployment & infrastructure (nginx, compose, scripts)
 └── README.md
 ```
 
 ### Services
 This setup orchestrates the following services:
 
-- **Nginx** - Reverse proxy and load balancer
+- **Nginx** - Reverse proxy and TLS termination
 - **AI** - AI microservice (Node.js)
-- **Web** - Next.js scraper console covering jobs, history, and live chat
+- **Web** - Arachne Web Interface (Next.js)
 - **Scraper** - Web scraping service (Go)
-- **Redis** - Job storage for Arachne
+- **Redis** - Job storage and coordination
 - **Redis Commander** - Optional Redis management UI
+
+## 🤔 What is Arachne?
+
+- Autonomous research agent that orchestrates search, scrape, and synthesis.
+- Web search → scrape → index → AI synthesis pipeline.
+- Change detection and version history across fetched content.
+- Full-text search powered by SQLite FTS5 for collected documents.
 
 ## 🚀 Quick Start
 
@@ -36,16 +39,16 @@ This setup orchestrates the following services:
 - Docker
 - Docker Compose
 
-### Running the Ecosystem
+### Running the platform
 
 1. **Start all services:**
    ```bash
    cd infrastructure
-   docker-compose up --build
+   docker compose up --build
    ```
 
 2. **Access the applications:**
-   - **Web Console**: http://localhost/
+   - **Arachne Web Interface**: http://localhost/
    - **AI API**: http://localhost/api/ai/
    - **Scraper API**: http://localhost/api/scrape/
    - **Redis Commander**: http://localhost/redis/
@@ -54,7 +57,7 @@ This setup orchestrates the following services:
 3. **Stop all services:**
    ```bash
    cd infrastructure
-   docker-compose down
+   docker compose down
    ```
 
 ## 📁 Service Endpoints
@@ -148,13 +151,13 @@ docker-compose up --build
 
 ## 🔗 Submodules
 
-All of the services (`ai`, `scraper`, `web`) live in git submodules under `services/`. If you clone the repository without `--recurse-submodules`, run:
+The `ai` and `scraper` services are git submodules under `services/`. The `web` interface lives directly in this repository. If you clone without `--recurse-submodules`, run:
 
 ```bash
 git submodule update --init --recursive
 ```
 
-This fetches the `web` submodule along with the existing services. When switching branches that touch submodules, rerun the command or checkout with `git submodule sync --recursive`.
+This fetches the `ai` and `scraper` submodules. When switching branches that touch submodules, rerun the command or checkout with `git submodule sync --recursive`.
 
 ## 📊 Monitoring
 
@@ -162,18 +165,18 @@ This fetches the `web` submodule along with the existing services. When switchin
 All services include health checks that can be monitored:
 ```bash
 cd infrastructure
-docker-compose ps
+docker compose ps
 ```
 
 ### Logs
 View logs for specific services:
 ```bash
 cd infrastructure
-docker-compose logs workfolio
-docker-compose logs ai
-docker-compose logs scraper
-docker-compose logs nginx
-docker-compose logs web
+docker compose logs ai
+docker compose logs scraper
+docker compose logs nginx
+docker compose logs web
+docker compose logs redis
 ```
 
 ### Redis Monitoring
@@ -198,17 +201,17 @@ For production deployment:
 
 2. **Set up SSL certificates**:
    ```bash
-   docker-compose -f prod/docker-compose.prod.yml --profile ssl-setup up certbot
+   docker compose -f prod/docker-compose.prod.yml --profile ssl-setup up certbot
    ```
 
 3. **Start production services**:
    ```bash
-   docker-compose -f prod/docker-compose.prod.yml up -d
+   docker compose -f prod/docker-compose.prod.yml up -d
    ```
 
 4. **Monitor the deployment**:
    ```bash
-   docker-compose -f prod/docker-compose.prod.yml logs -f
+   docker compose -f prod/docker-compose.prod.yml logs -f
    ```
 
 For detailed deployment instructions, see [Environment Setup Guide](infrastructure/ENVIRONMENT_SETUP.md).
@@ -228,16 +231,16 @@ For detailed deployment instructions, see [Environment Setup Guide](infrastructu
 cd infrastructure
 
 # Check service status
-docker-compose ps
+docker compose ps
 
 # View logs
-docker-compose logs -f
+docker compose logs -f
 
 # Rebuild specific service
-docker-compose build workfolio
+docker compose build web
 
 # Access service shell
-docker-compose exec workfolio sh
+docker compose exec web sh
 ```
 
 ## 🤝 Contributing
