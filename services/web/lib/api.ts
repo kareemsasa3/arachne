@@ -5,7 +5,7 @@
 
 // Get basePath from Next.js config (available at build time)
 // In dev, this comes from next.config.ts
-export const BASE_PATH = process.env.NEXT_PUBLIC_BASE_PATH || '/arachne';
+export const BASE_PATH = process.env.NEXT_PUBLIC_BASE_PATH || '';
 
 /**
  * Construct a URL that respects the basePath

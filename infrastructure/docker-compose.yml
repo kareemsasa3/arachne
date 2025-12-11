@@ -59,6 +59,8 @@ services:
       - SCRAPER_URL=${SCRAPER_URL:-http://scraper:8080}
       - SCRAPER_API_TOKEN=${SCRAPER_API_TOKEN:-}
       - PROFILE_CONTEXT_PATH=/app/profile/profile.md
+      - BRAVE_SEARCH_API_KEY=${BRAVE_SEARCH_API_KEY:-}
+      - SERPAPI_API_KEY=${SERPAPI_API_KEY:-}
     restart: unless-stopped
     networks:
       - arachne-network
