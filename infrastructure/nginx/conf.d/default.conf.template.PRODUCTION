@@ -33,7 +33,7 @@ server {
     }
 }
 
-# Main portfolio application with HTTPS
+# Arachne application with HTTPS
 server {
     listen 443 ssl default_server;
     http2 on;
@@ -58,29 +58,23 @@ server {
     add_header Strict-Transport-Security "max-age=31536000; includeSubDomains" always;
     add_header Content-Security-Policy "default-src 'self'; script-src 'self' https://challenges.cloudflare.com; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self' data:; connect-src 'self'; frame-src 'self' https://challenges.cloudflare.com; frame-ancestors 'self'; base-uri 'self'; form-action 'self'" always;
 
-    # Cache policy for static assets (hashed bundles)
-    location ~* \.(?:js|css|png|jpg|jpeg|gif|ico|svg|webp|woff|woff2|ttf)$ {
-        add_header Cache-Control "public, max-age=31536000, immutable" always;
-        proxy_pass http://workfolio:80;
+    # Next.js static assets
+    location /_next/ {
+        proxy_pass http://web:3000/_next/;
+        proxy_http_version 1.1;
         proxy_set_header Host $host;
-        proxy_set_header X-Real-IP $remote_addr;
-        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-        proxy_set_header X-Forwarded-Proto $scheme;
     }
 
-    # Ensure index.html is never cached
-    location = /index.html {
-        add_header Cache-Control "no-store, no-cache, must-revalidate, proxy-revalidate, max-age=0" always;
-        proxy_pass http://workfolio:80;
+    location /__nextjs_font/ {
+        proxy_pass http://web:3000/__nextjs_font/;
+        proxy_http_version 1.1;
         proxy_set_header Host $host;
-        proxy_set_header X-Real-IP $remote_addr;
-        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-        proxy_set_header X-Forwarded-Proto $scheme;
     }
 
-    # Main portfolio (Workfolio)
+    # Arachne app at root
     location / {
-        proxy_pass http://workfolio:80;
+        proxy_pass http://web:3000;
+        proxy_http_version 1.1;
         proxy_set_header Host $host;
         proxy_set_header X-Real-IP $remote_addr;
         proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
@@ -91,7 +85,7 @@ server {
     location /api/ai/ {
         limit_req zone=api burst=20 nodelay;
         rewrite ^/api/ai(/.*)$ $1 break;
-        proxy_pass http://ai-backend:3001;
+        proxy_pass http://ai:3001;
         proxy_set_header Host $host;
         proxy_set_header X-Real-IP $remote_addr;
         proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
@@ -115,11 +109,11 @@ server {
     }
 
     # NOTE: Public Arachne scraping API has been intentionally removed in production.
-    # ai-backend communicates with Arachne over the internal Docker network.
+    # ai communicates with the scraper over the internal Docker network.
 
     # Arachne health and metrics
     location /api/arachne/ {
-        proxy_pass http://arachne:8080/;
+        proxy_pass http://scraper:8080/;
         proxy_set_header Host $host;
         proxy_set_header X-Real-IP $remote_addr;
         proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;

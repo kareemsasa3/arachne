@@ -1,8 +1,8 @@
 {
-    "uid": "ai-backend-dashboard",
+    "uid": "ai-dashboard",
     "title": "AI Backend Overview",
     "tags": [
-        "ai-backend",
+        "ai",
         "prometheus"
     ],
     "timezone": "browser",

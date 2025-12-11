@@ -3,7 +3,8 @@ root = "."
 tmp_dir = "tmp"
 
 [build]
-cmd = "go build -o ./tmp/arachne ./cmd/arachne/main.go"
+# Build with sqlite_fts5 via CGO for FTS search
+cmd = "CGO_ENABLED=1 go build -tags sqlite_fts5 -o ./tmp/arachne ./cmd/arachne/main.go"
 bin = "./tmp/arachne"
 full_bin = "./tmp/arachne -api-port=8080"
 include_ext = ["go"]

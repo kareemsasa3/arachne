@@ -1,0 +1,46 @@
+@import "tailwindcss";
+
+:root {
+  --background: #1a1a1a;
+  --foreground: #ededed;
+  --font-oxanium: var(--font-oxanium);
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: var(--font-geist-sans), Arial, sans-serif;
+}
+
+.font-oxanium {
+  font-family: var(--font-oxanium);
+}
+
+@keyframes spider-crawl {
+  0% {
+    transform: translate(-8%, -6%) rotate(-4deg);
+  }
+  50% {
+    transform: translate(45vw, 35vh) rotate(6deg);
+  }
+  100% {
+    transform: translate(88vw, 78vh) rotate(-2deg);
+  }
+}
+
+@keyframes spider-bob {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-6px);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation: none !important;
+    transition: none !important;
+  }
+}

@@ -24,22 +24,22 @@ jobs:
       - name: Build workfolio image
         uses: docker/build-push-action@v5
         with:
-          context: ./workfolio
-          file: ./workfolio/Dockerfile
+          context: ./services/workfolio
+          file: ./services/workfolio/Dockerfile
           push: false
           load: true
           tags: workfolio:ci
           build-args: |
             VITE_TURNSTILE_SITE_KEY=${{ secrets.VITE_TURNSTILE_SITE_KEY }}
-            VITE_AI_BACKEND_URL=${{ secrets.VITE_AI_BACKEND_URL }}
+            VITE_AI_URL=${{ secrets.VITE_AI_URL }}
 
-      - name: Build ai-backend image
+      - name: Build ai image
         uses: docker/build-push-action@v5
         with:
-          context: ./services/ai-backend
+          context: ./services/ai
           push: false
           load: true
-          tags: ai-backend:ci
+          tags: ai:ci
 
   docker-scan:
     runs-on: ubuntu-latest
@@ -58,9 +58,9 @@ jobs:
         run: |
           docker build \
             --build-arg VITE_TURNSTILE_SITE_KEY=${{ secrets.VITE_TURNSTILE_SITE_KEY }} \
-            --build-arg VITE_AI_BACKEND_URL=${{ secrets.VITE_AI_BACKEND_URL }} \
-            -t workfolio:scan ./workfolio
-          docker build -t ai-backend:scan ./services/ai-backend
+            --build-arg VITE_AI_URL=${{ secrets.VITE_AI_URL }} \
+            -t workfolio:scan ./services/workfolio
+          docker build -t ai:scan ./services/ai
 
       - name: Scan images with Trivy
         uses: aquasecurity/trivy-action@0.24.0
@@ -70,10 +70,10 @@ jobs:
           exit-code: "0"
           ignore-unfixed: true
 
-      - name: Scan ai-backend with Trivy
+      - name: Scan ai with Trivy
         uses: aquasecurity/trivy-action@0.24.0
         with:
-          image-ref: "ai-backend:scan"
+          image-ref: "ai:scan"
           format: "table"
           exit-code: "0"
           ignore-unfixed: true

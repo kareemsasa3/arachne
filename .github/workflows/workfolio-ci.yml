@@ -28,8 +28,8 @@ jobs:
           git submodule sync --recursive
           git submodule update --init --recursive
           ls -la
-          ls -la workfolio
-          test -f workfolio/Dockerfile && echo "Found workfolio/Dockerfile" || (echo "Missing workfolio/Dockerfile" && exit 1)
+          ls -la services/workfolio
+          test -f services/workfolio/Dockerfile && echo "Found services/workfolio/Dockerfile" || (echo "Missing services/workfolio/Dockerfile" && exit 1)
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
@@ -46,20 +46,20 @@ jobs:
         if: github.ref != 'refs/heads/main' && github.ref != 'refs/heads/master'
         uses: docker/build-push-action@v5
         with:
-          context: ./workfolio
+          context: ./services/workfolio
           load: true
           push: false
           tags: |
             workfolio:ci
           build-args: |
             VITE_TURNSTILE_SITE_KEY=${{ secrets.VITE_TURNSTILE_SITE_KEY }}
-            VITE_AI_BACKEND_URL=/api/ai
+            VITE_AI_URL=/api/ai
 
       - name: Build and push Workfolio image (GHCR, main/master only)
         if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master'
         uses: docker/build-push-action@v5
         with:
-          context: ./workfolio
+          context: ./services/workfolio
           push: true
           tags: |
             ghcr.io/${{ github.repository }}/workfolio:${{ github.sha }}
@@ -67,7 +67,7 @@ jobs:
             ghcr.io/${{ github.repository }}/workfolio:latest
           build-args: |
             VITE_TURNSTILE_SITE_KEY=${{ secrets.VITE_TURNSTILE_SITE_KEY }}
-            VITE_AI_BACKEND_URL=/api/ai
+            VITE_AI_URL=/api/ai
 
       - name: Scan Workfolio image with Trivy (local)
         if: github.ref != 'refs/heads/main' && github.ref != 'refs/heads/master'
@@ -90,18 +90,18 @@ jobs:
           exit-code: 1
 
       # Alternative: build from within the submodule directory
-      # - name: Build (working-directory: workfolio)
+      # - name: Build (working-directory: services/workfolio)
       #   uses: docker/build-push-action@v5
       #   with:
-      #     context: ./workfolio
-      #     file: ./workfolio/Dockerfile
+      #     context: ./services/workfolio
+      #     file: ./services/workfolio/Dockerfile
       #     load: true
       #     tags: workfolio:ci
       #     build-args: |
       #       VITE_TURNSTILE_SITE_KEY=${{ secrets.VITE_TURNSTILE_SITE_KEY }}
-      #       VITE_AI_BACKEND_URL=${{ secrets.VITE_AI_BACKEND_URL }}
+#       VITE_AI_URL=${{ secrets.VITE_AI_URL }}
 
-  build-ai-backend:
+  build-ai:
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -114,15 +114,15 @@ jobs:
           submodules: recursive
           ssh-key: ${{ secrets.SUBMODULE_SSH_KEY }}
           ssh-strict: true
-      - name: Verify submodule checkout (ai-backend)
+      - name: Verify submodule checkout (ai)
         run: |
           git submodule status || true
           git submodule sync --recursive
           git submodule update --init --recursive
           ls -la
           ls -la services
-          ls -la services/ai-backend
-          test -f services/ai-backend/Dockerfile && echo "Found services/ai-backend/Dockerfile" || (echo "Missing services/ai-backend/Dockerfile" && exit 1)
+          ls -la services/ai
+          test -f services/ai/Dockerfile && echo "Found services/ai/Dockerfile" || (echo "Missing services/ai/Dockerfile" && exit 1)
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
 
@@ -133,48 +133,48 @@ jobs:
           registry: ghcr.io
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
-      - name: Build ai-backend image (local, PRs only)
+      - name: Build ai image (local, PRs only)
         if: github.ref != 'refs/heads/main' && github.ref != 'refs/heads/master'
         uses: docker/build-push-action@v5
         with:
-          context: ./services/ai-backend
+          context: ./services/ai
           load: true
           push: false
           tags: |
-            ai-backend:ci
+            ai:ci
 
-      - name: Build and push ai-backend image (GHCR, main/master only)
+      - name: Build and push ai image (GHCR, main/master only)
         if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master'
         uses: docker/build-push-action@v5
         with:
-          context: ./services/ai-backend
+          context: ./services/ai
           push: true
           tags: |
-            ghcr.io/${{ github.repository }}/ai-backend:${{ github.sha }}
-            ghcr.io/${{ github.repository }}/ai-backend:${{ github.ref_name }}
-            ghcr.io/${{ github.repository }}/ai-backend:latest
+            ghcr.io/${{ github.repository }}/ai:${{ github.sha }}
+            ghcr.io/${{ github.repository }}/ai:${{ github.ref_name }}
+            ghcr.io/${{ github.repository }}/ai:latest
 
-      - name: Scan ai-backend image with Trivy (local)
+      - name: Scan ai image with Trivy (local)
         if: github.ref != 'refs/heads/main' && github.ref != 'refs/heads/master'
         uses: aquasecurity/trivy-action@0.20.0
         with:
           scan-type: image
-          image-ref: ai-backend:ci
+          image-ref: ai:ci
           format: table
           severity: CRITICAL
           exit-code: 1
 
-      - name: Scan ai-backend image with Trivy (remote)
+      - name: Scan ai image with Trivy (remote)
         if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master'
         uses: aquasecurity/trivy-action@0.20.0
         with:
           scan-type: image
-          image-ref: ghcr.io/${{ github.repository }}/ai-backend:${{ github.sha }}
+          image-ref: ghcr.io/${{ github.repository }}/ai:${{ github.sha }}
           format: table
           severity: CRITICAL
           exit-code: 1
 
-  build-arachne:
+  build-scraper:
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -187,15 +187,15 @@ jobs:
           submodules: recursive
           ssh-key: ${{ secrets.SUBMODULE_SSH_KEY }}
           ssh-strict: true
-      - name: Verify submodule checkout (arachne)
+      - name: Verify submodule checkout (scraper)
         run: |
           git submodule status || true
           git submodule sync --recursive
           git submodule update --init --recursive
           ls -la
           ls -la services
-          ls -la services/arachne
-          test -f services/arachne/Dockerfile && echo "Found services/arachne/Dockerfile" || (echo "Missing services/arachne/Dockerfile" && exit 1)
+          ls -la services/scraper
+          test -f services/scraper/Dockerfile && echo "Found services/scraper/Dockerfile" || (echo "Missing services/scraper/Dockerfile" && exit 1)
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
 
@@ -206,43 +206,117 @@ jobs:
           registry: ghcr.io
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
-      - name: Build arachne image (local, PRs only)
+      - name: Build scraper image (local, PRs only)
         if: github.ref != 'refs/heads/main' && github.ref != 'refs/heads/master'
         uses: docker/build-push-action@v5
         with:
-          context: ./services/arachne
+          context: ./services/scraper
           load: true
           push: false
           tags: |
-            arachne:ci
+            scraper:ci
 
-      - name: Build and push arachne image (GHCR, main/master only)
+      - name: Build and push scraper image (GHCR, main/master only)
         if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master'
         uses: docker/build-push-action@v5
         with:
-          context: ./services/arachne
+          context: ./services/scraper
           push: true
           tags: |
-            ghcr.io/${{ github.repository }}/arachne:${{ github.sha }}
-            ghcr.io/${{ github.repository }}/arachne:${{ github.ref_name }}
-            ghcr.io/${{ github.repository }}/arachne:latest
+            ghcr.io/${{ github.repository }}/scraper:${{ github.sha }}
+            ghcr.io/${{ github.repository }}/scraper:${{ github.ref_name }}
+            ghcr.io/${{ github.repository }}/scraper:latest
 
-      - name: Scan arachne image with Trivy (local)
+      - name: Scan scraper image with Trivy (local)
         if: github.ref != 'refs/heads/main' && github.ref != 'refs/heads/master'
         uses: aquasecurity/trivy-action@0.20.0
         with:
           scan-type: image
-          image-ref: arachne:ci
+          image-ref: scraper:ci
           format: table
           severity: CRITICAL
           exit-code: 1
 
-      - name: Scan arachne image with Trivy (remote)
+      - name: Scan scraper image with Trivy (remote)
         if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master'
         uses: aquasecurity/trivy-action@0.20.0
         with:
           scan-type: image
-          image-ref: ghcr.io/${{ github.repository }}/arachne:${{ github.sha }}
+          image-ref: ghcr.io/${{ github.repository }}/scraper:${{ github.sha }}
+          format: table
+          severity: CRITICAL
+          exit-code: 1
+
+  build-web:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          submodules: recursive
+          ssh-key: ${{ secrets.SUBMODULE_SSH_KEY }}
+          ssh-strict: true
+      - name: Verify submodule checkout (web)
+        run: |
+          git submodule status || true
+          git submodule sync --recursive
+          git submodule update --init --recursive
+          ls -la
+          ls -la services
+          ls -la services/web
+          test -f services/web/Dockerfile && echo "Found services/web/Dockerfile" || (echo "Missing services/web/Dockerfile" && exit 1)
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Log in to GHCR (main/master only)
+        if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master'
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build web image (local, PRs only)
+        if: github.ref != 'refs/heads/main' && github.ref != 'refs/heads/master'
+        uses: docker/build-push-action@v5
+        with:
+          context: ./services/web
+          load: true
+          push: false
+          tags: |
+            web:ci
+
+      - name: Build and push web image (GHCR, main/master only)
+        if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master'
+        uses: docker/build-push-action@v5
+        with:
+          context: ./services/web
+          push: true
+          tags: |
+            ghcr.io/${{ github.repository }}/web:${{ github.sha }}
+            ghcr.io/${{ github.repository }}/web:${{ github.ref_name }}
+            ghcr.io/${{ github.repository }}/web:latest
+
+      - name: Scan web image with Trivy (local)
+        if: github.ref != 'refs/heads/main' && github.ref != 'refs/heads/master'
+        uses: aquasecurity/trivy-action@0.20.0
+        with:
+          scan-type: image
+          image-ref: web:ci
+          format: table
+          severity: CRITICAL
+          exit-code: 1
+
+      - name: Scan web image with Trivy (remote)
+        if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master'
+        uses: aquasecurity/trivy-action@0.20.0
+        with:
+          scan-type: image
+          image-ref: ghcr.io/${{ github.repository }}/web:${{ github.sha }}
           format: table
           severity: CRITICAL
           exit-code: 1

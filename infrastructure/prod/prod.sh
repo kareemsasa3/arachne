@@ -97,11 +97,10 @@ check_url() {
 
 # nginx health (HTTP 80 inside container, exposed on host)
 check_url "http://localhost/health" 60 2 || echo "⚠️  nginx health not ready yet"
-# workfolio served by nginx, same URL covers it
-# ai-backend proxied via nginx
-check_url "http://localhost/api/ai/health" 60 2 || echo "⚠️  ai-backend not ready yet"
-# arachne proxied via nginx
-check_url "http://localhost/api/scrape/health" 60 2 || echo "⚠️  arachne not ready yet"
+# ai service proxied via nginx
+check_url "http://localhost/api/ai/health" 60 2 || echo "⚠️  ai service not ready yet"
+# scraper proxied via nginx
+check_url "http://localhost/api/scrape/health" 60 2 || echo "⚠️  scraper not ready yet"
 
 echo ""
 echo "🔍 Docker Compose service status:"
@@ -112,8 +111,8 @@ echo "✅ Production stack successfully deployed!"
 echo ""
 echo "📱 Your production services are now available at:"
 echo "   • Main Application:     https://your-domain.com"
-echo "   • AI Backend API:       https://your-domain.com/api/ai/health"
-echo "   • Arachne Scraper API:  https://your-domain.com/api/scrape/health"
+echo "   • AI API:               https://your-domain.com/api/ai/health"
+echo "   • Scraper API:          https://your-domain.com/api/scrape/health"
 echo ""
 echo "🔧 Production Features:"
 echo "   • Resource limits configured for optimal performance"

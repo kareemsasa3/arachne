@@ -1,33 +1,36 @@
-# Portfolio Ecosystem
+# Arachne - Autonomous Web Research Platform
 
-A unified Docker Compose setup for running the complete portfolio ecosystem with nginx as a reverse proxy.
+An autonomous research platform that searches, scrapes, indexes, and synthesizes web content using AI. Arachne continuously detects changes, keeps version history, and offers full-text search (FTS5) across collected documents.
 
 ## 🏗️ Architecture
 
 ### Folder Structure
 ```
-personal/
-├── workfolio/                    # Main portfolio (React)
-├── services/                     # Backend services showcased by Workfolio
-│   ├── ai-backend/              # AI microservice
-│   └── arachne/                 # Web scraping service
-├── infrastructure/              # Deployment & infrastructure
-│   ├── nginx/                   # Reverse proxy configuration
-│   ├── docker-compose.yml       # Production setup
-│   ├── docker-compose.dev.yml   # Development setup
-│   └── dev.sh                   # Development script
+arachne/
+├── services/
+│   ├── ai/                      # AI microservice (git submodule - nexus)
+│   ├── scraper/                 # Standalone scraping engine (git submodule)
+│   └── web/                     # Next.js Arachne web interface (in repo)
+├── infrastructure/              # Deployment & infrastructure (nginx, compose, scripts)
 └── README.md
 ```
 
 ### Services
 This setup orchestrates the following services:
 
-- **Nginx** - Reverse proxy and load balancer
-- **Workfolio** - Main portfolio application (React)
-- **AI Backend** - AI microservice (Node.js)
-- **Arachne** - Web scraping service (Go)
-- **Redis** - Job storage for Arachne
+- **Nginx** - Reverse proxy and TLS termination
+- **AI** - AI microservice (Node.js)
+- **Web** - Arachne Web Interface (Next.js)
+- **Scraper** - Web scraping service (Go)
+- **Redis** - Job storage and coordination
 - **Redis Commander** - Optional Redis management UI
+
+## 🤔 What is Arachne?
+
+- Autonomous research agent that orchestrates search, scrape, and synthesis.
+- Web search → scrape → index → AI synthesis pipeline.
+- Change detection and version history across fetched content.
+- Full-text search powered by SQLite FTS5 for collected documents.
 
 ## 🚀 Quick Start
 
@@ -36,44 +39,39 @@ This setup orchestrates the following services:
 - Docker
 - Docker Compose
 
-### Running the Ecosystem
+### Running the platform
 
 1. **Start all services:**
    ```bash
    cd infrastructure
-   docker-compose up --build
+   docker compose up --build
    ```
 
 2. **Access the applications:**
-   - **Main Portfolio**: http://localhost
-   - **AI Backend API**: http://localhost/api/ai/
-   - **Arachne API**: http://localhost/api/scrape/
+   - **Arachne Web Interface**: http://localhost/
+   - **AI API**: http://localhost/api/ai/
+   - **Scraper API**: http://localhost/api/scrape/
    - **Redis Commander**: http://localhost/redis/
    - **Health Check**: http://localhost/health
 
 3. **Stop all services:**
    ```bash
    cd infrastructure
-   docker-compose down
+   docker compose down
    ```
 
 ## 📁 Service Endpoints
 
-### Workfolio (Main Portfolio)
-- **URL**: http://localhost
-- **Internal**: http://workfolio:80
-- **Features**: Interactive terminal, virtual file system, Matrix aesthetic
-
-### AI Backend
+### AI
 - **URL**: http://localhost/api/ai/
-- **Internal**: http://ai-backend:3001
+- **Internal**: http://ai:3001
 - **Endpoints**:
   - `GET /health` - Health check
   - `POST /api/ai/process` - AI processing
 
-### Arachne (Web Scraping)
+### Scraper (Web Scraping)
 - **URL**: http://localhost/api/scrape/
-- **Internal**: http://arachne:8080
+- **Internal**: http://scraper:8080
 - **Endpoints**:
   - `POST /scrape` - Submit scraping job
   - `GET /scrape/status?id=<job_id>` - Check job status
@@ -119,7 +117,7 @@ nano .env
 | `DOMAIN_NAME` | Your domain name | Yes |
 | `SSL_EMAIL` | Email for SSL certificates | Yes |
 | `GEMINI_API_KEY` | Google Gemini API key | For AI features |
-| `VITE_AI_BACKEND_URL` | AI backend URL | Auto-configured |
+| `VITE_AI_URL` | AI URL | Auto-configured |
 
 ### Nginx Configuration
 
@@ -131,25 +129,35 @@ The nginx configuration is located in:
 
 Each service can be developed independently:
 
-### Workfolio
+### AI
 ```bash
-cd workfolio
+cd services/ai
 npm install
 npm run dev
 ```
 
-### AI Backend
+### Web Console
 ```bash
-cd services/ai-backend
+cd services/web
 npm install
 npm run dev
 ```
 
-### Arachne
+### Scraper
 ```bash
-cd services/arachne
+cd services/scraper
 docker-compose up --build
 ```
+
+## 🔗 Submodules
+
+The `ai` and `scraper` services are git submodules under `services/`. The `web` interface lives directly in this repository. If you clone without `--recurse-submodules`, run:
+
+```bash
+git submodule update --init --recursive
+```
+
+This fetches the `ai` and `scraper` submodules. When switching branches that touch submodules, rerun the command or checkout with `git submodule sync --recursive`.
 
 ## 📊 Monitoring
 
@@ -157,17 +165,18 @@ docker-compose up --build
 All services include health checks that can be monitored:
 ```bash
 cd infrastructure
-docker-compose ps
+docker compose ps
 ```
 
 ### Logs
 View logs for specific services:
 ```bash
 cd infrastructure
-docker-compose logs workfolio
-docker-compose logs ai-backend
-docker-compose logs arachne
-docker-compose logs nginx
+docker compose logs ai
+docker compose logs scraper
+docker compose logs nginx
+docker compose logs web
+docker compose logs redis
 ```
 
 ### Redis Monitoring
@@ -192,17 +201,17 @@ For production deployment:
 
 2. **Set up SSL certificates**:
    ```bash
-   docker-compose -f prod/docker-compose.prod.yml --profile ssl-setup up certbot
+   docker compose -f prod/docker-compose.prod.yml --profile ssl-setup up certbot
    ```
 
 3. **Start production services**:
    ```bash
-   docker-compose -f prod/docker-compose.prod.yml up -d
+   docker compose -f prod/docker-compose.prod.yml up -d
    ```
 
 4. **Monitor the deployment**:
    ```bash
-   docker-compose -f prod/docker-compose.prod.yml logs -f
+   docker compose -f prod/docker-compose.prod.yml logs -f
    ```
 
 For detailed deployment instructions, see [Environment Setup Guide](infrastructure/ENVIRONMENT_SETUP.md).
@@ -222,16 +231,16 @@ For detailed deployment instructions, see [Environment Setup Guide](infrastructu
 cd infrastructure
 
 # Check service status
-docker-compose ps
+docker compose ps
 
 # View logs
-docker-compose logs -f
+docker compose logs -f
 
 # Rebuild specific service
-docker-compose build workfolio
+docker compose build web
 
 # Access service shell
-docker-compose exec workfolio sh
+docker compose exec web sh
 ```
 
 ## 🤝 Contributing

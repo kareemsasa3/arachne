@@ -1,7 +1,10 @@
+# infrastructure/dev/arachne.Dockerfile
 # Dev image for Arachne with live-reload (air) and Chromium
+# Pattern: root user, bind-mounted code from host, hot reload via Air
+
 FROM golang:1.23-alpine
 
-# Install dependencies for headless Chromium and build tools
+# Install dependencies for headless Chromium, SQLite FTS5 (via CGO), and build tools
 RUN apk --no-cache add \
     ca-certificates \
     chromium \
@@ -11,37 +14,34 @@ RUN apk --no-cache add \
     ttf-freefont \
     git \
     bash \
-    build-base
+    build-base \
+    sqlite-dev \
+    sqlite-libs
 
 # Enable automatic toolchain download (allows Air requiring newer Go)
 ENV GOTOOLCHAIN=auto
+# Enable CGO for sqlite_fts5
+ENV CGO_ENABLED=1
 
 # Install air for live reloading
 RUN go install github.com/air-verse/air@latest
 
+# Chrome paths
 ENV CHROME_BIN=/usr/bin/chromium-browser
 ENV CHROME_PATH=/usr/lib/chromium/
-
-# Create non-root user and prepare writable Go caches/paths
-RUN addgroup -g 1001 -S appgroup && \
-    adduser -u 1001 -S appuser -G appgroup && \
-    mkdir -p /home/appuser/go /home/appuser/.cache/go-build && \
-    chown -R appuser:appgroup /home/appuser && \
-    chown -R appuser:appgroup /go || true
-
-# Use per-user Go paths to avoid permission issues
-ENV GOPATH=/home/appuser/go
-ENV GOMODCACHE=/home/appuser/go/pkg/mod
-ENV GOCACHE=/home/appuser/.cache/go-build
-ENV XDG_CACHE_HOME=/home/appuser/.cache
 
 WORKDIR /app
 
 # Expose service port
 EXPOSE 8080
 
-# Default command runs air; config is mounted at /app/.air.toml
-USER appuser
-CMD ["/go/bin/air"]
+# Dev runs as root - code is bind-mounted from host, needs write access for:
+# - /app/tmp (Air temp files)
+# - /app/data (runtime data)
+# - Go build cache
+# Non-root user is used in production Dockerfile only.
 
+# Air binary is in /go/bin from go install
+ENV PATH="/go/bin:${PATH}"
 
+CMD ["air"]

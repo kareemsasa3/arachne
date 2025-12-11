@@ -29,7 +29,7 @@ A comprehensive environment variables template containing:
 - `infrastructure/dev/docker-compose.dev.yml` - Development configuration
 
 #### Individual Service Files Updated:
-- `services/ai-backend/docker-compose.yml` - AI backend service
+- `services/ai/docker-compose.yml` - AI backend service
 - `services/arachne/docker-compose.yml` - Arachne scraper service
 
 #### Key Changes Made:

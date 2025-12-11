@@ -1,0 +1,18 @@
+# services/web/Dockerfile.dev
+# Dev: install deps in-image; code bind-mounted; node_modules kept in container volume.
+
+FROM node:20
+
+ENV NODE_ENV=development
+
+WORKDIR /app
+
+# Install deps (cached)
+COPY package*.json ./
+RUN npm install
+
+# Source is bind-mounted in dev; this copy is only for npm install layer
+COPY . .
+
+# Next.js dev server; compose will pass host/port
+CMD ["npm", "run", "dev"]

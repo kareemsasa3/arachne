@@ -150,16 +150,16 @@ if [ "$NONINTERACTIVE" -eq 1 ] || [ "${SETUP_ENV_NONINTERACTIVE:-0}" = "1" ]; th
     DOMAIN_NAME
     SSL_EMAIL
     GEMINI_API_KEY
-    AI_BACKEND_REDIS_URL
+    AI_REDIS_URL
     CORS_ALLOW_ORIGIN
     RATE_LIMIT_WINDOW_MS
     RATE_LIMIT_MAX_REQUESTS
     AI_DAILY_LIMIT
-    ARACHNE_API_TOKEN
+    SCRAPER_API_TOKEN
     VITE_TURNSTILE_SITE_KEY
     TURNSTILE_SECRET
     SESSION_TOKEN_SECRET
-    VITE_AI_BACKEND_URL
+    VITE_AI_URL
   )
   for v in "${vars_to_apply[@]}"; do
     val="${!v-}"
@@ -174,11 +174,11 @@ if [ "$NONINTERACTIVE" -eq 1 ] || [ "${SETUP_ENV_NONINTERACTIVE:-0}" = "1" ]; th
     set_env_value "SESSION_TOKEN_SECRET" "$(generate_secret)"
   fi
 
-  # If DOMAIN_NAME present and VITE_AI_BACKEND_URL missing, set a sensible default
+  # If DOMAIN_NAME present and VITE_AI_URL missing, set a sensible default
   dn_cur=$(get_env_value "DOMAIN_NAME")
-  vite_api_cur=$(get_env_value "VITE_AI_BACKEND_URL")
+  vite_api_cur=$(get_env_value "VITE_AI_URL")
   if [ -n "$dn_cur" ] && [ -z "$vite_api_cur" ]; then
-    set_env_value "VITE_AI_BACKEND_URL" "https://$dn_cur/api/ai"
+    set_env_value "VITE_AI_URL" "https://$dn_cur/api/ai"
   fi
 
   print_status ".env updated from environment variables."
@@ -202,12 +202,12 @@ required_vars=(
 
 recommended_vars=(
   "GEMINI_API_KEY"
-  "AI_BACKEND_REDIS_URL"
+  "AI_REDIS_URL"
   "CORS_ALLOW_ORIGIN"
   "RATE_LIMIT_WINDOW_MS"
   "RATE_LIMIT_MAX_REQUESTS"
   "AI_DAILY_LIMIT"
-  "ARACHNE_API_TOKEN"
+  "SCRAPER_API_TOKEN"
   "VITE_TURNSTILE_SITE_KEY"
   "TURNSTILE_SECRET"
 )
@@ -247,30 +247,30 @@ print_header "DOMAIN CONFIGURATION"
 prompt_update_var "DOMAIN_NAME" "Enter your domain name (e.g., yourdomain.com)" "yes"
 prompt_update_var "SSL_EMAIL" "Enter your email for SSL certificate notifications" "yes"
 
-# Optionally set VITE_AI_BACKEND_URL based on DOMAIN_NAME
+# Optionally set VITE_AI_URL based on DOMAIN_NAME
 domain_name=$(get_env_value "DOMAIN_NAME")
 if [ -n "$domain_name" ]; then
   desired_api_url="https://$domain_name/api/ai"
-  current_api_url=$(get_env_value "VITE_AI_BACKEND_URL")
+  current_api_url=$(get_env_value "VITE_AI_URL")
   echo
-  print_header "VITE_AI_BACKEND_URL"
+  print_header "VITE_AI_URL"
   print_status "Suggested value based on domain: $desired_api_url"
   if [ -n "$current_api_url" ]; then
     print_status "Current value: $current_api_url"
   fi
-  echo "Do you want to update VITE_AI_BACKEND_URL? (u) Update / (s) Skip [s]:"
+  echo "Do you want to update VITE_AI_URL? (u) Update / (s) Skip [s]:"
   read -r upd
   if [[ "$upd" =~ ^[Uu]$ ]]; then
-    echo "Enter value for VITE_AI_BACKEND_URL (leave empty to use suggested):"
+    echo "Enter value for VITE_AI_URL (leave empty to use suggested):"
     read -r new_api
     if [ -z "$new_api" ]; then new_api="$desired_api_url"; fi
-    set_env_value "VITE_AI_BACKEND_URL" "$new_api"
-    print_status "Updated VITE_AI_BACKEND_URL."
+    set_env_value "VITE_AI_URL" "$new_api"
+    print_status "Updated VITE_AI_URL."
   fi
 fi
 
-# AI Backend configuration
-print_header "AI BACKEND CONFIGURATION"
+# AI configuration
+print_header "AI CONFIGURATION"
 prompt_update_var "GEMINI_API_KEY" "Enter your Google Gemini API key" "no"
 
 print_header "TURNSTILE (OPTIONAL)"
@@ -302,15 +302,15 @@ else
 fi
 
 print_header "REDIS (OPTIONAL)"
-prompt_update_var "AI_BACKEND_REDIS_URL" "Enter Redis URL for per-IP quotas (default: redis://redis:6379/0)" "no"
+prompt_update_var "AI_REDIS_URL" "Enter Redis URL for per-IP quotas (default: redis://redis:6379/0)" "no"
 
-# Arachne API protection (optional but recommended in production)
-print_header "ARACHNE SECURITY (OPTIONAL)"
-prompt_update_var "ARACHNE_API_TOKEN" "Enter API token to protect Arachne /api/scrape endpoints (recommended in prod)" "no"
+# Scraper API protection (optional but recommended in production)
+print_header "SCRAPER SECURITY (OPTIONAL)"
+prompt_update_var "SCRAPER_API_TOKEN" "Enter API token to protect scraper /api/scrape endpoints (recommended in prod)" "no"
 
-# Update VITE_AI_BACKEND_URL if domain was provided
+# Update VITE_AI_URL if domain was provided
 if [ -n "$domain_name" ]; then
-    sed -i.bak "s|VITE_AI_BACKEND_URL=https://your-domain.com/api/ai|VITE_AI_BACKEND_URL=https://$domain_name/api/ai|" .env
+    sed -i.bak "s|VITE_AI_URL=https://your-domain.com/api/ai|VITE_AI_URL=https://$domain_name/api/ai|" .env
 fi
 
 # Optional customizations
@@ -324,16 +324,10 @@ if [[ "$customize_resources" =~ ^[Yy]$ ]]; then
         sed -i.bak "s/NGINX_MEMORY_LIMIT=256M/NGINX_MEMORY_LIMIT=$nginx_memory/" .env
     fi
     
-    echo "Enter memory limit for Workfolio (default: 512M):"
-    read -r workfolio_memory
-    if [ -n "$workfolio_memory" ]; then
-        sed -i.bak "s/WORKFOLIO_MEMORY_LIMIT=512M/WORKFOLIO_MEMORY_LIMIT=$workfolio_memory/" .env
-    fi
-    
-    echo "Enter memory limit for AI Backend (default: 1G):"
+    echo "Enter memory limit for AI (default: 1G):"
     read -r ai_memory
     if [ -n "$ai_memory" ]; then
-        sed -i.bak "s/AI_BACKEND_MEMORY_LIMIT=1G/AI_BACKEND_MEMORY_LIMIT=$ai_memory/" .env
+        sed -i.bak "s/AI_MEMORY_LIMIT=1G/AI_MEMORY_LIMIT=$ai_memory/" .env
     fi
 fi
 

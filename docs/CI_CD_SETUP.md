@@ -16,7 +16,7 @@ The CI/CD pipeline consists of two main workflows:
 **Triggers**: Pull requests and pushes to main/master branches
 
 **Jobs**:
-- **Lint & Test**: Runs linting and tests for all services (workfolio, ai-backend, arachne)
+- **Lint & Test**: Runs linting and tests for all services (workfolio, ai, arachne, web)
 - **Build Images**: Builds Docker images for all services to verify they can be built
 - **Security Scan**: Runs Trivy vulnerability scanner on the codebase
 
@@ -103,8 +103,12 @@ services:
     image: ${WORKFOLIO_IMAGE:-ghcr.io/your-username/personal-website/workfolio:latest}
     # ... other configuration
 
-  ai-backend:
-    image: ${AI_BACKEND_IMAGE:-ghcr.io/your-username/personal-website/ai-backend:latest}
+  web:
+    image: ${ARACHNE_UI_IMAGE:-ghcr.io/your-username/personal-website/web:latest}
+    # ... other configuration
+
+  ai:
+    image: ${AI_BACKEND_IMAGE:-ghcr.io/your-username/personal-website/ai:latest}
     # ... other configuration
 
   arachne:
@@ -114,8 +118,8 @@ services:
 
 ### 4. Service-Specific Setup
 
-#### Node.js Services (workfolio, ai-backend)
-Ensure these services have the following scripts in their `package.json`:
+#### Node.js Services (workfolio, ai, web)
+Ensure these services expose at least a `lint` script (and optionally a `test` script) so the CI workflow can run the same commands before building.
 
 ```json
 {
@@ -125,6 +129,8 @@ Ensure these services have the following scripts in their `package.json`:
   }
 }
 ```
+
+If you do not have real tests yet, a lightweight `test` script such as `echo "No tests specified"` keeps the workflow happy (the `web` submodule already ships with `lint` and can mirror this pattern).
 
 #### Go Service (arachne)
 The Go service uses standard Go tooling:
@@ -163,6 +169,8 @@ Images are tagged with:
 - **Commit SHA**: `ghcr.io/username/repo/service:abc123...`
 - **Branch name**: `ghcr.io/username/repo/service:main`
 - **Latest**: `ghcr.io/username/repo/service:latest` (only for main branch)
+
+The deploy workflow does the same for `web` by exporting `ARACHNE_UI_IMAGE=ghcr.io/${{ github.repository }}/web:${{ github.event.workflow_run.head_sha }}`, so the production compose can pull the matching Next.js console image.
 
 ## Monitoring and Troubleshooting
 

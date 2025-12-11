@@ -29,9 +29,9 @@ services:
       - ../logs/nginx:/var/log/nginx
       - ../nginx/conf.d/default.conf.template:/tmp/default.conf.template:ro
     depends_on:
-      - workfolio
-      - ai-backend
-      - arachne
+      - ai
+      - scraper
+      - web
     restart: unless-stopped
     networks:
       - portfolio-network-prod
@@ -52,18 +52,25 @@ services:
           memory: 128M
           cpus: "0.25"
 
-  # Workfolio - Production build
-  workfolio:
-    image: ${WORKFOLIO_IMAGE:-ghcr.io/your-username/personal-website/workfolio:latest}
+  # Web Console - Scraper console
+  web:
+    image: ${WEB_IMAGE:-ghcr.io/your-username/personal-website/web:latest}
     environment:
-      - DOMAIN_NAME=${DOMAIN_NAME}
-      - NODE_ENV=${WORKFOLIO_NODE_ENV:-production}
-      - VITE_AI_BACKEND_URL=${VITE_AI_BACKEND_URL:-https://your-domain.com/api/ai}
+      - NODE_ENV=${WEB_NODE_ENV:-production}
+      - PORT=${WEB_PORT:-3000}
+      # Server-side URLs (can access Docker internal network)
+      - AI_URL=${AI_URL:-http://ai:3001}
+      - SCRAPER_API_URL=${SCRAPER_API_URL:-http://scraper:8080}
+      # Client-side URL (browser must go through nginx proxy)
+      - NEXT_PUBLIC_SCRAPER_API_URL=/api/arachne
+    depends_on:
+      - ai
+      - scraper
     restart: unless-stopped
     networks:
       - portfolio-network-prod
     healthcheck:
-      test: ["CMD-SHELL", "curl -fsS http://127.0.0.1:80/health || exit 1"]
+      test: ["CMD-SHELL", "wget --no-verbose --tries=1 --spider http://127.0.0.1:3000/ || exit 1"]
       interval: 30s
       timeout: 10s
       retries: 3
@@ -71,8 +78,8 @@ services:
     deploy:
       resources:
         limits:
-          memory: ${WORKFOLIO_MEMORY_LIMIT:-512M}
-          cpus: "${WORKFOLIO_CPU_LIMIT:-1.0}"
+          memory: ${WEB_MEMORY_LIMIT:-512M}
+          cpus: "${WEB_CPU_LIMIT:-1.0}"
         reservations:
           memory: 256M
           cpus: "0.5"
@@ -83,22 +90,22 @@ services:
         max-file: "3"
 
   # AI Backend - Production optimized
-  ai-backend:
-    image: ${AI_BACKEND_IMAGE:-ghcr.io/your-username/personal-website/ai-backend:latest}
+  ai:
+    image: ${AI_IMAGE:-ghcr.io/your-username/personal-website/ai:latest}
     environment:
-      - NODE_ENV=${AI_BACKEND_NODE_ENV:-production}
-      - PORT=${AI_BACKEND_PORT:-3001}
+      - NODE_ENV=${AI_NODE_ENV:-production}
+      - PORT=${AI_PORT:-3001}
       - GEMINI_API_KEY=${GEMINI_API_KEY}
-      - LOG_LEVEL=${AI_BACKEND_LOG_LEVEL:-info}
-      - ENABLE_METRICS=${AI_BACKEND_ENABLE_METRICS:-true}
-      - RATE_LIMIT_WINDOW_MS=${AI_BACKEND_RATE_LIMIT_WINDOW_MS:-900000}
-      - RATE_LIMIT_MAX_REQUESTS=${AI_BACKEND_RATE_LIMIT_MAX_REQUESTS:-100}
+      - LOG_LEVEL=${AI_LOG_LEVEL:-info}
+      - ENABLE_METRICS=${AI_ENABLE_METRICS:-true}
+      - RATE_LIMIT_WINDOW_MS=${AI_RATE_LIMIT_WINDOW_MS:-900000}
+      - RATE_LIMIT_MAX_REQUESTS=${AI_RATE_LIMIT_MAX_REQUESTS:-100}
       - SESSION_TOKEN_SECRET=${SESSION_TOKEN_SECRET}
-      - REDIS_URL=${AI_BACKEND_REDIS_URL:-redis://redis:6379/0}
+      - REDIS_URL=${AI_REDIS_URL:-redis://redis:6379/0}
       - TURNSTILE_SECRET=${TURNSTILE_SECRET}
       - TURNSTILE_REQUIRED=${TURNSTILE_REQUIRED:-false}
-      - ARACHNE_URL=${ARACHNE_URL:-http://arachne:8080}
-      - ARACHNE_API_TOKEN=${ARACHNE_API_TOKEN}
+      - SCRAPER_URL=${SCRAPER_URL:-http://scraper:8080}
+      - SCRAPER_API_TOKEN=${SCRAPER_API_TOKEN}
       - CORS_ALLOW_ORIGIN=${CORS_ALLOW_ORIGIN:-https://${DOMAIN_NAME}}
       - CORS_ALLOW_METHODS=${CORS_ALLOW_METHODS:-GET, POST, OPTIONS}
       - CORS_ALLOW_HEADERS=${CORS_ALLOW_HEADERS:-DNT,User-Agent,X-Requested-With,If-Modified-Since,Cache-Control,Content-Type,Range,Authorization}
@@ -123,8 +130,8 @@ services:
     deploy:
       resources:
         limits:
-          memory: ${AI_BACKEND_MEMORY_LIMIT:-1G}
-          cpus: "${AI_BACKEND_CPU_LIMIT:-1.0}"
+          memory: ${AI_MEMORY_LIMIT:-1G}
+          cpus: "${AI_CPU_LIMIT:-1.0}"
         reservations:
           memory: 512M
           cpus: "0.5"
@@ -134,26 +141,26 @@ services:
         max-size: "10m"
         max-file: "3"
 
-  # Arachne - Production optimized with enhanced settings
-  arachne:
-    image: ${ARACHNE_IMAGE:-ghcr.io/your-username/personal-website/arachne:latest}
+  # Scraper - Production optimized with enhanced settings
+  scraper:
+    image: ${SCRAPER_IMAGE:-ghcr.io/your-username/personal-website/scraper:latest}
     environment:
-      - SCRAPER_REDIS_ADDR=${ARACHNE_REDIS_ADDR:-redis:6379}
-      - SCRAPER_REDIS_DB=${ARACHNE_REDIS_DB:-0}
-      - SCRAPER_ENABLE_METRICS=${ARACHNE_ENABLE_METRICS:-true}
-      - SCRAPER_ENABLE_LOGGING=${ARACHNE_ENABLE_LOGGING:-true}
-      - SCRAPER_LOG_LEVEL=${ARACHNE_LOG_LEVEL:-info}
-      - SCRAPER_MAX_CONCURRENT=${ARACHNE_MAX_CONCURRENT:-10}
-      - SCRAPER_REQUEST_TIMEOUT=${ARACHNE_REQUEST_TIMEOUT:-120s}
-      - SCRAPER_TOTAL_TIMEOUT=${ARACHNE_TOTAL_TIMEOUT:-180s}
-      - SCRAPER_USE_HEADLESS=${ARACHNE_USE_HEADLESS:-true}
-      - SCRAPER_HEADLESS_IGNORE_CERT_ERRORS=${ARACHNE_HEADLESS_IGNORE_CERT_ERRORS:-false}
-      - SCRAPER_HEADLESS_NO_SANDBOX=${ARACHNE_HEADLESS_NO_SANDBOX:-false}
-      - SCRAPER_MAX_CONTENT_BYTES=${ARACHNE_MAX_CONTENT_BYTES:-400000}
-      - SCRAPER_USER_AGENT=${ARACHNE_USER_AGENT:-Mozilla/5.0 (compatible; PortfolioBot/1.0)}
-      - SCRAPER_RATE_LIMIT=${ARACHNE_RATE_LIMIT:-2}
-      - SCRAPER_RATE_LIMIT_WINDOW=${ARACHNE_RATE_LIMIT_WINDOW:-1s}
-      - SCRAPER_API_TOKEN=${ARACHNE_API_TOKEN}
+      - SCRAPER_REDIS_ADDR=${SCRAPER_REDIS_ADDR:-redis:6379}
+      - SCRAPER_REDIS_DB=${SCRAPER_REDIS_DB:-0}
+      - SCRAPER_ENABLE_METRICS=${SCRAPER_ENABLE_METRICS:-true}
+      - SCRAPER_ENABLE_LOGGING=${SCRAPER_ENABLE_LOGGING:-true}
+      - SCRAPER_LOG_LEVEL=${SCRAPER_LOG_LEVEL:-info}
+      - SCRAPER_MAX_CONCURRENT=${SCRAPER_MAX_CONCURRENT:-10}
+      - SCRAPER_REQUEST_TIMEOUT=${SCRAPER_REQUEST_TIMEOUT:-120s}
+      - SCRAPER_TOTAL_TIMEOUT=${SCRAPER_TOTAL_TIMEOUT:-180s}
+      - SCRAPER_USE_HEADLESS=${SCRAPER_USE_HEADLESS:-true}
+      - SCRAPER_HEADLESS_IGNORE_CERT_ERRORS=${SCRAPER_HEADLESS_IGNORE_CERT_ERRORS:-false}
+      - SCRAPER_HEADLESS_NO_SANDBOX=${SCRAPER_HEADLESS_NO_SANDBOX:-false}
+      - SCRAPER_MAX_CONTENT_BYTES=${SCRAPER_MAX_CONTENT_BYTES:-400000}
+      - SCRAPER_USER_AGENT=${SCRAPER_USER_AGENT:-Mozilla/5.0 (compatible; PortfolioBot/1.0)}
+      - SCRAPER_RATE_LIMIT=${SCRAPER_RATE_LIMIT:-2}
+      - SCRAPER_RATE_LIMIT_WINDOW=${SCRAPER_RATE_LIMIT_WINDOW:-1s}
+      - SCRAPER_API_TOKEN=${SCRAPER_API_TOKEN}
     depends_on:
       - redis
     restart: unless-stopped
@@ -176,8 +183,8 @@ services:
     deploy:
       resources:
         limits:
-          memory: ${ARACHNE_MEMORY_LIMIT:-2G}
-          cpus: "${ARACHNE_CPU_LIMIT:-1.0}"
+          memory: ${SCRAPER_MEMORY_LIMIT:-2G}
+          cpus: "${SCRAPER_CPU_LIMIT:-1.0}"
         reservations:
           memory: 1G
           cpus: "0.5"

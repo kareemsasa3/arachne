@@ -41,4 +41,4 @@ Brief, high-signal summary of your background, domain focus, and impact. 3–5 s
 Notes:
 - Update this file to reflect your most accurate, current profile.
 - The AI backend injects up to ~8000 characters from here into every chat.
-- After editing in dev, restart the AI backend container to reload: `docker compose -f infrastructure/docker-compose.yml -f infrastructure/dev/docker-compose.dev.yml restart ai-backend`.
+- After editing in dev, restart the AI container to reload: `docker compose -f infrastructure/docker-compose.yml -f infrastructure/dev/docker-compose.dev.yml restart ai`.
