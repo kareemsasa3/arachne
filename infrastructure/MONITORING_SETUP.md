@@ -1,6 +1,6 @@
 # Monitoring & Observability Stack
 
-This document describes the comprehensive monitoring and observability stack for the personal portfolio website.
+This document describes the comprehensive monitoring and observability stack for the personal arachne website.
 
 ## 🎯 Overview
 

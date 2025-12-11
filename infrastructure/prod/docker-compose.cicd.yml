@@ -2,7 +2,7 @@ services:
   # Certbot service for automatic SSL certificate management
   certbot:
     image: certbot/certbot:latest
-    container_name: portfolio-certbot
+    container_name: arachne-certbot
     volumes:
       - ./nginx/ssl:/etc/letsencrypt
       - ./nginx/certbot/www:/var/www/certbot
@@ -17,7 +17,7 @@ services:
   # Nginx reverse proxy - Production optimized
   nginx:
     image: nginx:alpine
-    container_name: portfolio-nginx-prod
+    container_name: arachne-nginx-prod
     environment:
       - DOMAIN_NAME=${DOMAIN_NAME}
     ports:
@@ -49,7 +49,7 @@ services:
   # AI service - Production optimized from GHCR
   ai:
     image: ${AI_IMAGE:-ghcr.io/kareemsasa3/personal-website/ai:latest}
-    container_name: portfolio-ai-prod
+    container_name: arachne-ai-prod
     environment:
       - NODE_ENV=${AI_NODE_ENV:-production}
       - PORT=${AI_PORT:-3001}
@@ -58,11 +58,10 @@ services:
       - ENABLE_METRICS=${AI_ENABLE_METRICS:-true}
       - RATE_LIMIT_WINDOW_MS=${AI_RATE_LIMIT_WINDOW_MS:-900000}
       - RATE_LIMIT_MAX_REQUESTS=${AI_RATE_LIMIT_MAX_REQUESTS:-100}
-    restart: unless-stopped
-    environment:
       - SCRAPER_URL=${SCRAPER_URL:-http://scraper:8080}
       - SCRAPER_API_TOKEN=${SCRAPER_API_TOKEN}
       - PROFILE_CONTEXT_PATH=/app/profile/profile.md
+    restart: unless-stopped
     healthcheck:
       test:
         [
@@ -94,7 +93,7 @@ services:
   # Scraper - Production optimized from GHCR
   scraper:
     image: ${SCRAPER_IMAGE:-ghcr.io/kareemsasa3/personal-website/scraper:latest}
-    container_name: portfolio-scraper-prod
+    container_name: arachne-scraper-prod
     environment:
       - SCRAPER_REDIS_ADDR=${SCRAPER_REDIS_ADDR:-redis:6379}
       - SCRAPER_REDIS_DB=${SCRAPER_REDIS_DB:-0}
@@ -105,7 +104,7 @@ services:
       - SCRAPER_REQUEST_TIMEOUT=${SCRAPER_REQUEST_TIMEOUT:-120s}
       - SCRAPER_TOTAL_TIMEOUT=${SCRAPER_TOTAL_TIMEOUT:-180s}
       - SCRAPER_USE_HEADLESS=${SCRAPER_USE_HEADLESS:-true}
-      - SCRAPER_USER_AGENT=${SCRAPER_USER_AGENT:-Mozilla/5.0 (compatible; PortfolioBot/1.0)}
+      - SCRAPER_USER_AGENT=${SCRAPER_USER_AGENT:-Mozilla/5.0 (compatible; ArachneBot/1.0)}
       - SCRAPER_RATE_LIMIT=${SCRAPER_RATE_LIMIT:-2}
       - SCRAPER_RATE_LIMIT_WINDOW=${SCRAPER_RATE_LIMIT_WINDOW:-1s}
     depends_on:
@@ -143,7 +142,7 @@ services:
   # Redis - Production optimized
   redis:
     image: redis:7-alpine
-    container_name: portfolio-redis-prod
+    container_name: arachne-redis-prod
     volumes:
       - redis_data_prod:/data
       - ./logs/redis:/var/log/redis
@@ -178,7 +177,7 @@ services:
   # Redis Commander - Optional, can be disabled in production
   redis-commander:
     image: rediscommander/redis-commander:latest
-    container_name: portfolio-redis-commander-prod
+    container_name: arachne-redis-commander-prod
     environment:
       - REDIS_HOSTS=local:redis:${REDIS_PORT:-6379}
     depends_on:

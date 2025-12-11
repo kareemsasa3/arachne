@@ -58,10 +58,10 @@ if [ $# -gt 0 ]; then
     done
 fi
 
-NGINX_CONTAINER="portfolio-nginx-prod"
+NGINX_CONTAINER="arachne-nginx-prod"
 BASE_URL="https://localhost"
 if [ "$ENVIRONMENT" = "dev" ]; then
-    NGINX_CONTAINER="portfolio-nginx"
+    NGINX_CONTAINER="arachne-nginx"
     BASE_URL="http://localhost"
 fi
 

@@ -2,7 +2,7 @@
 
 ## 🎉 What We've Accomplished
 
-Your portfolio project now has **complete SSL/HTTPS support** configured and ready for deployment!
+Your arachne project now has **complete SSL/HTTPS support** configured and ready for deployment!
 
 ### ✅ Completed Tasks
 
@@ -203,4 +203,4 @@ You now have a **production-ready SSL configuration** that:
 - ✅ Provides clear documentation and troubleshooting guides
 - ✅ Is ready for Let's Encrypt or commercial certificates
 
-**Your portfolio project is now secure and ready for the world! 🌍** 
+**Your arachne project is now secure and ready for the world! 🌍** 

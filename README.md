@@ -86,7 +86,7 @@ This setup orchestrates the following services:
 
 ### Environment Variables
 
-The portfolio uses a centralized environment variable system. For detailed configuration, see [Environment Setup Guide](infrastructure/ENVIRONMENT_SETUP.md).
+Arachne uses a centralized environment variable system. For detailed configuration, see [Environment Setup Guide](infrastructure/ENVIRONMENT_SETUP.md).
 
 #### Quick Setup
 

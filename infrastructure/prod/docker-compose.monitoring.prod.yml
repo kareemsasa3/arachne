@@ -4,7 +4,7 @@
 services:
   prometheus:
     image: prom/prometheus:v2.37.0
-    container_name: portfolio-prometheus-prod
+    container_name: arachne-prometheus-prod
     volumes:
       - ../monitoring/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
       - prometheus_data_prod:/prometheus
@@ -19,7 +19,7 @@ services:
     ports:
       - "9090:9090"
     networks:
-      - portfolio-network-prod
+      - arachne-network-prod
     restart: unless-stopped
     healthcheck:
       test:
@@ -51,7 +51,7 @@ services:
 
   grafana:
     image: grafana/grafana:9.2.0
-    container_name: portfolio-grafana-prod
+    container_name: arachne-grafana-prod
     volumes:
       - grafana_data_prod:/var/lib/grafana
       - ../monitoring/grafana/provisioning:/etc/grafana/provisioning:ro
@@ -70,7 +70,7 @@ services:
     ports:
       - "3000:3000"
     networks:
-      - ${DOCKER_NETWORK_NAME:-portfolio-network}-prod
+      - ${DOCKER_NETWORK_NAME:-arachne-network}-prod
     restart: unless-stopped
     depends_on:
       - prometheus
@@ -104,7 +104,7 @@ services:
 
   grafana-admin:
     image: grafana/grafana:9.2.0
-    container_name: portfolio-grafana-admin-prod
+    container_name: arachne-grafana-admin-prod
     volumes:
       - grafana_admin_data_prod:/var/lib/grafana
       - ../monitoring/grafana/provisioning:/etc/grafana/provisioning:ro
@@ -120,7 +120,7 @@ services:
       - GF_AUTH_ANONYMOUS_ENABLED=false
       - GF_AUTH_DISABLE_LOGIN_FORM=false
     networks:
-      - portfolio-network-prod
+      - arachne-network-prod
     restart: unless-stopped
     depends_on:
       - prometheus
@@ -153,7 +153,7 @@ services:
         max-file: "3"
   node-exporter:
     image: prom/node-exporter:v1.3.1
-    container_name: portfolio-node-exporter-prod
+    container_name: arachne-node-exporter-prod
     volumes:
       - /proc:/host/proc:ro
       - /sys:/host/sys:ro
@@ -166,7 +166,7 @@ services:
     ports:
       - "9100:9100"
     networks:
-      - portfolio-network-prod
+      - arachne-network-prod
     restart: unless-stopped
     healthcheck:
       test:
@@ -198,14 +198,14 @@ services:
 
   nginx-exporter:
     image: nginx/nginx-prometheus-exporter:0.10.0
-    container_name: portfolio-nginx-exporter-prod
+    container_name: arachne-nginx-exporter-prod
     command:
       - -nginx.scrape-uri=http://nginx:80/stub_status
       - -nginx.ssl-verify=false
     ports:
       - "9113:9113"
     networks:
-      - portfolio-network-prod
+      - arachne-network-prod
     restart: unless-stopped
     depends_on:
       - nginx
@@ -239,14 +239,14 @@ services:
 
   redis-exporter:
     image: oliver006/redis_exporter:v1.39.0
-    container_name: portfolio-redis-exporter-prod
+    container_name: arachne-redis-exporter-prod
     command:
       - -redis.addr=redis://redis:6379
       - -redis.password=
     ports:
       - "9121:9121"
     networks:
-      - portfolio-network-prod
+      - arachne-network-prod
     restart: unless-stopped
     depends_on:
       - redis

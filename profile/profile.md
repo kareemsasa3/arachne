@@ -16,14 +16,14 @@ Brief, high-signal summary of your background, domain focus, and impact. 3–5 s
 - AI Platforms: <OpenAI, Anthropic, etc>
 
 ## Highlights / Evidence
-- Built Workfolio (interactive portfolio) with terminal, VFS, and rich UI/UX
+- Built Arachne web interface with terminal-like UX, VFS, and rich UI/UX
 - Designed and ran an AI backend microservice (Gemini/OpenAI/Anthropic)
 - Built Arachne, a Go-based scraping service with headless browsing, Redis persistence, and metrics
 - Production-grade Nginx reverse proxy, templated SSL, health checks
 - Event-driven orchestration and tool use via AI backend
 
 ## Selected Projects
-- Workfolio: React/TypeScript, terminal simulation, navigation, animations
+- Arachne Web: React/TypeScript (Next.js), terminal simulation, navigation, animations
 - AI Backend: Node.js service with rate limiting, metrics, session handling
 - Arachne: Go scraper with headless strategy, circuit breaker, Redis storage
 - <Add other relevant work or open-source>

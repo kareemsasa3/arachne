@@ -1,9 +1,9 @@
 #!/bin/bash
 
 # =============================================================================
-# PORTFOLIO ENVIRONMENT SETUP SCRIPT
+# Arachne ENVIRONMENT SETUP SCRIPT
 # =============================================================================
-# This script helps you set up your environment variables for the portfolio
+# This script helps you set up your environment variables for the arachne
 # Copy this script to your infrastructure directory and run it
 
 set -euo pipefail
@@ -53,7 +53,7 @@ if [ ! -f "env.example" ]; then
     exit 1
 fi
 
-print_header "PORTFOLIO ENVIRONMENT SETUP"
+print_header "Arachne ENVIRONMENT SETUP"
 
 # -----------------------------------------------------------------------------
 # Helpers for reading and writing .env values (defined early for use below)

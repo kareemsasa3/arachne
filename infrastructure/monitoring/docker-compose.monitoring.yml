@@ -3,7 +3,7 @@
 services:
   prometheus:
     image: prom/prometheus:v2.37.0
-    container_name: portfolio-prometheus
+    container_name: arachne-prometheus
     volumes:
       - ./monitoring/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
       - prometheus_data:/prometheus
@@ -17,7 +17,7 @@ services:
     ports:
       - "9090:9090"
     networks:
-      - portfolio-network
+      - arachne-network
     restart: unless-stopped
     healthcheck:
       test:
@@ -36,7 +36,7 @@ services:
 
   grafana:
     image: grafana/grafana:9.2.0
-    container_name: portfolio-grafana
+    container_name: arachne-grafana
     volumes:
       - grafana_data:/var/lib/grafana
       - ./monitoring/grafana/provisioning:/etc/grafana/provisioning:ro
@@ -55,7 +55,7 @@ services:
     ports:
       - "3000:3000"
     networks:
-      - portfolio-network
+      - arachne-network
     restart: unless-stopped
     depends_on:
       - prometheus
@@ -76,7 +76,7 @@ services:
 
   grafana-admin:
     image: grafana/grafana:9.2.0
-    container_name: portfolio-grafana-admin
+    container_name: arachne-grafana-admin
     volumes:
       - grafana_admin_data:/var/lib/grafana
       - ./monitoring/grafana/provisioning:/etc/grafana/provisioning:ro
@@ -92,13 +92,13 @@ services:
       - GF_AUTH_ANONYMOUS_ENABLED=false
       - GF_AUTH_DISABLE_LOGIN_FORM=false
     networks:
-      - portfolio-network
+      - arachne-network
     restart: unless-stopped
     depends_on:
       - prometheus
   node-exporter:
     image: prom/node-exporter:v1.3.1
-    container_name: portfolio-node-exporter
+    container_name: arachne-node-exporter
     volumes:
       - /proc:/host/proc:ro
       - /sys:/host/sys:ro
@@ -111,7 +111,7 @@ services:
     ports:
       - "9100:9100"
     networks:
-      - portfolio-network
+      - arachne-network
     restart: unless-stopped
     healthcheck:
       test:
@@ -130,14 +130,14 @@ services:
 
   nginx-exporter:
     image: nginx/nginx-prometheus-exporter:0.10.0
-    container_name: portfolio-nginx-exporter
+    container_name: arachne-nginx-exporter
     command:
       - -nginx.scrape-uri=http://nginx:80/stub_status
       - -nginx.ssl-verify=false
     ports:
       - "9113:9113"
     networks:
-      - portfolio-network
+      - arachne-network
     restart: unless-stopped
     depends_on:
       - nginx
@@ -159,14 +159,14 @@ services:
   redis-exporter:
     image: oliver006/redis_exporter:v1.39.0
     platform: linux/amd64
-    container_name: portfolio-redis-exporter
+    container_name: arachne-redis-exporter
     command:
       - -redis.addr=redis://redis:6379
       - -redis.password=
     ports:
       - "9121:9121"
     networks:
-      - portfolio-network
+      - arachne-network
     restart: unless-stopped
     depends_on:
       - redis
@@ -186,7 +186,7 @@ services:
       start_period: 40s
 
 networks:
-  portfolio-network:
+  arachne-network:
     driver: bridge
 
 volumes:

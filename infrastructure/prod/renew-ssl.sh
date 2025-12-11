@@ -20,11 +20,11 @@ docker run --rm \
   "$CERTBOT_IMAGE" renew --webroot -w /var/www/certbot --quiet || true
 
 # Reload nginx if it's up
-if docker ps --format '{{.Names}}' | grep -q '^portfolio-nginx-prod$'; then
+if docker ps --format '{{.Names}}' | grep -q '^arachne-nginx-prod$'; then
   echo "[renew-ssl] Reloading nginx..."
-  docker exec portfolio-nginx-prod nginx -t && \
-  docker exec portfolio-nginx-prod nginx -s reload || \
-  docker restart portfolio-nginx-prod || true
+  docker exec arachne-nginx-prod nginx -t && \
+  docker exec arachne-nginx-prod nginx -s reload || \
+  docker restart arachne-nginx-prod || true
 fi
 
 echo "[renew-ssl] Done."

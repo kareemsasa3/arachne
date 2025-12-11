@@ -105,22 +105,22 @@ fi
 echo ""
 print_info "Checking service directories..."
 
-if [ -d "workfolio" ]; then
-    print_success "Workfolio service directory found"
+if [ -d "services/web" ]; then
+    print_success "Web service directory found"
     
-    if [ -f "workfolio/package.json" ]; then
-        print_success "Workfolio package.json found"
+    if [ -f "services/web/package.json" ]; then
+        print_success "Web package.json found"
     else
-        print_warning "Workfolio package.json not found"
+        print_warning "Web package.json not found"
     fi
     
-    if [ -f "workfolio/Dockerfile" ]; then
-        print_success "Workfolio Dockerfile found"
+    if [ -f "services/web/Dockerfile" ]; then
+        print_success "Web Dockerfile found"
     else
-        print_warning "Workfolio Dockerfile not found"
+        print_warning "Web Dockerfile not found"
     fi
 else
-    print_warning "Workfolio service directory not found"
+    print_warning "Web service directory not found"
 fi
 
 if [ -d "services/ai" ]; then
@@ -182,7 +182,7 @@ check_package_scripts() {
     fi
 }
 
-check_package_scripts "workfolio" "Workfolio"
+check_package_scripts "services/web" "Web"
 check_package_scripts "services/ai" "AI"
 
 # Check Docker build capability

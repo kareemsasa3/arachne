@@ -1,4 +1,4 @@
-# Portfolio Stack - Development & Production Commands
+# Arachne Stack - Development & Production Commands
 # Usage: make [target]
 
 .PHONY: help dev dev-build dev-down dev-logs prod prod-down prod-logs \
@@ -6,7 +6,7 @@
 
 # Default target
 help:
-	@echo "Portfolio Stack Commands"
+	@echo "Arachne Stack Commands"
 	@echo ""
 	@echo "Development:"
 	@echo "  make install     - Install npm deps on host (required before dev)"

@@ -26,7 +26,7 @@ We've successfully implemented a complete **enterprise-grade CI/CD pipeline** fo
 **Purpose**: Quality assurance and validation
 
 1. **Lint & Test**: Runs in parallel for all services
-   - **workfolio**: Node.js linting and testing
+   - **web**: Node.js linting and testing
    - **ai**: Node.js linting and testing  
    - **web**: Next.js linting and placeholder smoke tests
    - **arachne**: Go vet and testing
@@ -126,14 +126,14 @@ Ensure your production server has:
 
 ### Environment Variables
 The CI/CD pipeline uses these environment variables for image selection:
-- `WORKFOLIO_IMAGE` - Workfolio service image
+- `WEB_IMAGE` - Web service image
 - `AI_BACKEND_IMAGE` - AI backend service image
 - `ARACHNE_IMAGE` - Arachne service image
 - `ARACHNE_UI_IMAGE` - Next.js scraper console image
 
 ### Service Health Checks
 All services include health checks to ensure they're running correctly:
-- **workfolio**: HTTP health check on port 3000
+- **web**: HTTP health check on port 3000
 - **ai**: HTTP health check on port 3001
 - **web**: HTTP health check on port 3000 (Next.js console served via /arachne)
 - **arachne**: HTTP health check on port 8080

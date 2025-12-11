@@ -1,6 +1,6 @@
 # 🔐 SSL Certificate Setup Guide
 
-This guide will help you set up SSL certificates for HTTPS support in your portfolio project.
+This guide will help you set up SSL certificates for HTTPS support in your arachne project.
 
 ## 🚀 Quick Start
 

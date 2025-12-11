@@ -1,11 +1,11 @@
 #!/bin/bash
 
-# Production deployment script for the portfolio stack
+# Production deployment script for the arachne stack
 # This script starts the services in production mode with optimized settings
 
 set -euo pipefail  # Exit on error, unset vars, and fail pipelines
 
-echo "🚀 Starting portfolio stack in PRODUCTION mode..."
+echo "🚀 Starting arachne stack in PRODUCTION mode..."
 echo "   This will deploy all services with production-optimized settings"
 echo ""
 
@@ -40,7 +40,7 @@ if ! command -v docker compose &> /dev/null; then
 fi
 
 # Ensure external production network exists
-docker network create portfolio-network-prod >/dev/null 2>&1 || true
+docker network create arachne-network-prod >/dev/null 2>&1 || true
 
 # Create logs directory if it doesn't exist
 echo "📁 Creating logs directory..."

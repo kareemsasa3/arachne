@@ -2,7 +2,7 @@ services:
   # Nginx reverse proxy
   nginx:
     image: nginx:alpine
-    container_name: portfolio-nginx
+    container_name: arachne-nginx
     ports:
       - "${NGINX_HTTP_PORT:-80}:80"
       - "${NGINX_HTTPS_PORT:-443}:443"
@@ -16,14 +16,14 @@ services:
       - web
     restart: unless-stopped
     networks:
-      - portfolio-network
+      - arachne-network
 
   # Web Console - SaaS for managing the scraper frontend
   web:
     build:
       context: ../services/web
       dockerfile: Dockerfile
-    container_name: portfolio-web
+    container_name: arachne-web
     environment:
       - NODE_ENV=${WEB_NODE_ENV:-production}
       - PORT=${WEB_PORT:-3000}
@@ -37,14 +37,14 @@ services:
       - scraper
     restart: unless-stopped
     networks:
-      - portfolio-network
+      - arachne-network
 
   # AI Backend - AI microservice
   ai:
     build:
       context: ../services/ai
       dockerfile: Dockerfile
-    container_name: portfolio-ai
+    container_name: arachne-ai
     environment:
       - NODE_ENV=${AI_NODE_ENV:-production}
       - PORT=${AI_PORT:-3001}
@@ -61,14 +61,14 @@ services:
       - PROFILE_CONTEXT_PATH=/app/profile/profile.md
     restart: unless-stopped
     networks:
-      - portfolio-network
+      - arachne-network
 
   # Scraper - Web scraping service
   scraper:
     build:
       context: ../services/scraper
       dockerfile: Dockerfile
-    container_name: portfolio-scraper
+    container_name: arachne-scraper
     # Chrome requires adequate shared memory for rendering
     shm_size: '2gb'
     environment:
@@ -84,7 +84,7 @@ services:
       - SCRAPER_HEADLESS_IGNORE_CERT_ERRORS=${SCRAPER_HEADLESS_IGNORE_CERT_ERRORS:-false}
       - SCRAPER_HEADLESS_NO_SANDBOX=${SCRAPER_HEADLESS_NO_SANDBOX:-false}
       - SCRAPER_MAX_CONTENT_BYTES=${SCRAPER_MAX_CONTENT_BYTES:-300000}
-      - SCRAPER_USER_AGENT=${SCRAPER_USER_AGENT:-Mozilla/5.0 (compatible; PortfolioBot/1.0)}
+      - SCRAPER_USER_AGENT=${SCRAPER_USER_AGENT:-Mozilla/5.0 (compatible; ArachneBot/1.0)}
       - SCRAPER_RATE_LIMIT=${SCRAPER_RATE_LIMIT:-2}
       - SCRAPER_RATE_LIMIT_WINDOW=${SCRAPER_RATE_LIMIT_WINDOW:-1s}
       - SCRAPER_API_TOKEN=${SCRAPER_API_TOKEN:-}
@@ -93,18 +93,18 @@ services:
         condition: service_healthy
     restart: unless-stopped
     networks:
-      - portfolio-network
+      - arachne-network
 
   # Redis - Required by Arachne for job storage
   redis:
     image: redis:7-alpine
-    container_name: portfolio-redis
+    container_name: arachne-redis
     volumes:
       - redis_data:/data
     command: redis-server --appendonly yes --maxmemory ${REDIS_MAX_MEMORY:-512mb} --maxmemory-policy ${REDIS_MAX_MEMORY_POLICY:-allkeys-lru}
     restart: unless-stopped
     networks:
-      - portfolio-network
+      - arachne-network
     healthcheck:
       test: ["CMD", "redis-cli", "ping"]
       interval: 30s
@@ -115,17 +115,17 @@ services:
   redis-commander:
     image: rediscommander/redis-commander:latest
     platform: linux/amd64
-    container_name: portfolio-redis-commander
+    container_name: arachne-redis-commander
     environment:
       - REDIS_HOSTS=local:redis:${REDIS_PORT:-6379}
     depends_on:
       - redis
     restart: unless-stopped
     networks:
-      - portfolio-network
+      - arachne-network
 
 networks:
-  portfolio-network:
+  arachne-network:
     driver: bridge
 
 volumes:

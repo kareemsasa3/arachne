@@ -86,11 +86,11 @@ jobs:
           export SCRAPER_IMAGE=ghcr.io/\${REPO}/scraper:\${SHA}
           export SCRAPER_CPU_LIMIT=1.0
           # Ensure external prod network exists (idempotent)
-          docker network create portfolio-network-prod >/dev/null 2>&1 || true
+          docker network create arachne-network-prod >/dev/null 2>&1 || true
           # Bring down current prod stack (if any) to avoid port/cpu conflicts
           docker compose --env-file ../.env -f docker-compose.prod.yml -f docker-compose.monitoring.prod.yml down --remove-orphans || true
           # Cleanup any legacy containers by name (from previous compose files)
-          docker ps -aq --filter name='^portfolio-.*' | xargs -r docker rm -f || true
+          docker ps -aq --filter name='^arachne-.*' | xargs -r docker rm -f || true
           # Aggressive cleanup to free disk before pulling new images (keeps volumes)
           echo "Before prune:"
           docker system df || true
@@ -99,7 +99,7 @@ jobs:
           echo "After prune:"
           docker system df || true
           # Ensure external prod network exists (again) right before up
-          docker network create portfolio-network-prod >/dev/null 2>&1 || true
+          docker network create arachne-network-prod >/dev/null 2>&1 || true
           # Bring up services with fresh images, remove orphans, and force recreate (app + monitoring)
           docker compose --env-file ../.env -f docker-compose.prod.yml -f docker-compose.monitoring.prod.yml up -d --pull always --remove-orphans --force-recreate nginx web ai scraper prometheus grafana grafana-admin node-exporter nginx-exporter redis-exporter
           EOSSH

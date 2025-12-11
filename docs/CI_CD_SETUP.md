@@ -11,12 +11,12 @@ The CI/CD pipeline consists of two main workflows:
 
 ## Workflow Files
 
-### `.github/workflows/workfolio-ci.yml`
+### `.github/workflows/build-publish.yml`
 **Purpose**: Quality assurance and validation
 **Triggers**: Pull requests and pushes to main/master branches
 
 **Jobs**:
-- **Lint & Test**: Runs linting and tests for all services (workfolio, ai, arachne, web)
+- **Lint & Test**: Runs linting and tests for all services (ai, scraper, web)
 - **Build Images**: Builds Docker images for all services to verify they can be built
 - **Security Scan**: Runs Trivy vulnerability scanner on the codebase
 
@@ -58,8 +58,8 @@ PROD_SSH_KEY             # Private SSH key for production server access
 PROD_PORT                # SSH port (usually 22)
 
 # Frontend build-time secrets
-VITE_TURNSTILE_SITE_KEY  # Cloudflare Turnstile site key for Workfolio build
-VITE_AI_BACKEND_URL      # API base URL for Workfolio (e.g. https://your-domain.com/api/ai)
+VITE_TURNSTILE_SITE_KEY  # Cloudflare Turnstile site key for web build
+VITE_AI_URL              # API base URL for web (e.g. https://your-domain.com/api/ai)
 
 # Registry pull on production host (used during SSH deploy)
 GHCR_USERNAME            # GHCR username (usually your GitHub username)
@@ -99,8 +99,8 @@ Update your production docker-compose files to use the GHCR images (already conf
 ```yaml
 version: '3.8'
 services:
-  workfolio:
-    image: ${WORKFOLIO_IMAGE:-ghcr.io/your-username/personal-website/workfolio:latest}
+  web:
+    image: ${WEB_IMAGE:-ghcr.io/your-username/personal-website/web:latest}
     # ... other configuration
 
   web:
@@ -118,7 +118,7 @@ services:
 
 ### 4. Service-Specific Setup
 
-#### Node.js Services (workfolio, ai, web)
+#### Node.js Services (ai, web)
 Ensure these services expose at least a `lint` script (and optionally a `test` script) so the CI workflow can run the same commands before building.
 
 ```json

@@ -1,6 +1,6 @@
 # Infrastructure
 
-This directory contains the Docker Compose configuration and deployment scripts for the portfolio stack.
+This directory contains the Docker Compose configuration and deployment scripts for the arachne stack.
 
 ## 📁 Directory Structure
 
@@ -39,7 +39,7 @@ cd dev && ./dev.sh
 - No local SSL certificates are required for dev.
 - Access the stack at: `http://localhost`.
 - Dev proxy routes:
-  - Frontend (Workfolio): `/` → `workfolio:80`
+  - Web UI: `/` → `web:3000`
   - AI: `/api/ai/*` → `ai:3001`
   - Scraper: `/api/scrape/*` and `/api/arachne/*` → `scraper:8080`
 
@@ -68,7 +68,7 @@ Before starting the dev stack, install dependencies on the host for each JS serv
 ```bash
 # From the project root
 cd services/ai && npm install
-cd ../workfolio && npm install
+# web service lives under services/web
 cd ../web && npm install
 ```
 
@@ -108,7 +108,7 @@ This eliminates EACCES permission errors and keeps the setup simple:
 ## 📊 Services
 
 ### Core Services
-- **Workfolio**: React frontend application
+- **Web**: Next.js frontend application
 - **AI**: Node.js AI microservice
 - **Scraper**: Go web scraping service
 - **Redis**: Data storage for Scraper

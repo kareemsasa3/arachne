@@ -111,7 +111,7 @@ update_configurations() {
     sed -i.bak "s|https://your-domain.com|https://$DOMAIN|g" "$INFRA_DIR/prod/docker-compose.prod.yml"
     sed -i.bak "s/your-email@example.com/$EMAIL/g" "$INFRA_DIR/prod/docker-compose.prod.yml" || true
     sed -i.bak "s/your-domain.com/$DOMAIN/g" "$INFRA_DIR/prod/docker-compose.prod.yml"
-    # Update Workfolio VITE url if present
+    # Update web VITE url if present
     sed -i.bak "s|VITE_AI_URL=https://your-domain.com/api/ai|VITE_AI_URL=https://$DOMAIN/api/ai|g" "$INFRA_DIR/prod/docker-compose.prod.yml" || true
     
     print_status "Configuration files updated"

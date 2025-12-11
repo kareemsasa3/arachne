@@ -2,7 +2,7 @@
 
 ## Task Completed: Centralized Environment Variable System
 
-This document summarizes the implementation of a comprehensive centralized environment variable system for the portfolio project.
+This document summarizes the implementation of a comprehensive centralized environment variable system for the arachne project.
 
 ## What Was Accomplished
 
@@ -15,7 +15,7 @@ A comprehensive environment variables template containing:
 - **AI Backend Configuration**: Gemini API key and service settings
 - **Arachne Scraper Configuration**: Redis settings, scraping parameters, rate limits
 - **Redis Configuration**: Server settings, memory limits, management UI
-- **Workfolio Frontend Configuration**: Environment and API URL settings
+- **Web Frontend Configuration**: Environment and API URL settings
 - **Nginx Configuration**: Ports and SSL certificate paths
 - **Docker Configuration**: Network settings and resource limits
 - **Development Overrides**: Environment-specific configurations
@@ -153,4 +153,4 @@ The new system has been designed to:
 - **Support both development and production** environments
 - **Enable easy testing** and validation of configurations
 
-This centralized environment variable system provides a robust, secure, and maintainable foundation for the portfolio project's configuration management. 
+This centralized environment variable system provides a robust, secure, and maintainable foundation for the arachne project's configuration management. 

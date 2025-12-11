@@ -1,11 +1,11 @@
 #!/bin/bash
 
-# Monitoring stack setup script for the portfolio
+# Monitoring stack setup script for the arachne
 # This script sets up Prometheus and Grafana monitoring
 
 set -euo pipefail  # Exit on error, unset vars, and fail pipelines
 
-echo "📊 Setting up monitoring stack for portfolio..."
+echo "📊 Setting up monitoring stack for arachne..."
 echo "   This will configure Prometheus and Grafana for monitoring your services"
 echo ""
 
@@ -117,4 +117,4 @@ echo "   • Change default Grafana password after first login"
 echo "   • Consider restricting access to monitoring ports in production"
 echo "   • Set up proper authentication for Grafana in production"
 echo ""
-echo "🎉 Monitoring setup complete! Your portfolio is now fully observable." 
+echo "🎉 Monitoring setup complete! Your arachne is now fully observable." 

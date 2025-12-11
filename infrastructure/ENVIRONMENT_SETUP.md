@@ -1,10 +1,10 @@
 # Environment Configuration Guide
 
-This document explains how to set up and manage environment variables for the portfolio project.
+This document explains how to set up and manage environment variables for the arachne project.
 
 ## Overview
 
-The portfolio uses a centralized environment variable system to manage configuration across all services. This includes:
+The arachne uses a centralized environment variable system to manage configuration across all services. This includes:
 
 - **Domain configuration** for SSL certificates and routing
 - **API keys** for external services (Google Gemini AI)
@@ -107,14 +107,14 @@ nano .env
 | `REDIS_COMMANDER_ENABLED` | Enable Redis Commander UI | `true` | No |
 | `REDIS_COMMANDER_PORT` | Redis Commander port | `8081` | No |
 
-### Workfolio Frontend Configuration
+### Web Frontend Configuration
 
 | Variable | Description | Default | Required |
 |----------|-------------|---------|----------|
-| `WORKFOLIO_NODE_ENV` | Node.js environment | `production` | No |
-| `WORKFOLIO_PORT` | Frontend port | `3000` | No |
-| `VITE_AI_BACKEND_URL` | AI backend URL for frontend | `https://your-domain.com/api/ai` | No |
+| `VITE_AI_URL` | API base URL used by the web UI | `https://your-domain.com/api/ai` | No |
 | `VITE_TURNSTILE_SITE_KEY` | Cloudflare Turnstile site key (public) | - | Yes if using Turnstile |
+| `TURNSTILE_SECRET` | Cloudflare Turnstile secret key | - | Yes if using Turnstile |
+| `TURNSTILE_REQUIRED` | Require Turnstile for chats | `false` | No |
 
 ### Nginx Configuration
 
@@ -129,7 +129,7 @@ nano .env
 
 | Variable | Description | Default | Required |
 |----------|-------------|---------|----------|
-| `DOCKER_NETWORK_NAME` | Docker network name | `portfolio-network` | No |
+| `DOCKER_NETWORK_NAME` | Docker network name | `arachne-network` | No |
 | `DOCKER_NETWORK_SUBNET` | Docker network subnet | `172.20.0.0/16` | No |
 
 ### Resource Limits
@@ -138,12 +138,12 @@ nano .env
 |----------|-------------|---------|----------|
 | `NGINX_MEMORY_LIMIT` | Nginx memory limit | `256M` | No |
 | `NGINX_CPU_LIMIT` | Nginx CPU limit | `0.5` | No |
-| `WORKFOLIO_MEMORY_LIMIT` | Workfolio memory limit | `512M` | No |
-| `WORKFOLIO_CPU_LIMIT` | Workfolio CPU limit | `1.0` | No |
-| `AI_BACKEND_MEMORY_LIMIT` | AI backend memory limit | `1G` | No |
-| `AI_BACKEND_CPU_LIMIT` | AI backend CPU limit | `1.0` | No |
-| `ARACHNE_MEMORY_LIMIT` | Arachne memory limit | `2G` | No |
-| `ARACHNE_CPU_LIMIT` | Arachne CPU limit | `1.0` | No |
+| `WEB_MEMORY_LIMIT` | Web memory limit | `512M` | No |
+| `WEB_CPU_LIMIT` | Web CPU limit | `1.0` | No |
+| `AI_MEMORY_LIMIT` | AI backend memory limit | `1G` | No |
+| `AI_CPU_LIMIT` | AI backend CPU limit | `1.0` | No |
+| `SCRAPER_MEMORY_LIMIT` | Scraper memory limit | `2G` | No |
+| `SCRAPER_CPU_LIMIT` | Scraper CPU limit | `1.0` | No |
 | `REDIS_MEMORY_LIMIT` | Redis memory limit | `1G` | No |
 | `REDIS_CPU_LIMIT` | Redis CPU limit | `1.0` | No |
 
@@ -152,9 +152,8 @@ nano .env
 | Variable | Description | Default | Required |
 |----------|-------------|---------|----------|
 | `DEV_NODE_ENV` | Development Node.js environment | `development` | No |
-| `DEV_AI_BACKEND_PORT` | Development AI backend port | `3001` | No |
-| `DEV_WORKFOLIO_PORT` | Development frontend port | `3000` | No |
-| `DEV_ARACHNE_PORT` | Development Arachne port | `8080` | No |
+| `DEV_AI_PORT` | Development AI port | `3001` | No |
+| `DEV_SCRAPER_PORT` | Development scraper port | `8080` | No |
 
 ### Logging Configuration
 

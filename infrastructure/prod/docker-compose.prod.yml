@@ -34,7 +34,7 @@ services:
       - web
     restart: unless-stopped
     networks:
-      - portfolio-network-prod
+      - arachne-network-prod
     healthcheck:
       test: ["CMD-SHELL", "curl -fsS http://127.0.0.1:80/health || exit 1"]
       interval: 30s
@@ -68,7 +68,7 @@ services:
       - scraper
     restart: unless-stopped
     networks:
-      - portfolio-network-prod
+      - arachne-network-prod
     healthcheck:
       test: ["CMD-SHELL", "wget --no-verbose --tries=1 --spider http://127.0.0.1:3000/ || exit 1"]
       interval: 30s
@@ -112,7 +112,7 @@ services:
       - PROFILE_CONTEXT_PATH=/app/profile/profile.md
     restart: unless-stopped
     networks:
-      - portfolio-network-prod
+      - arachne-network-prod
     healthcheck:
       test:
         [
@@ -157,7 +157,7 @@ services:
       - SCRAPER_HEADLESS_IGNORE_CERT_ERRORS=${SCRAPER_HEADLESS_IGNORE_CERT_ERRORS:-false}
       - SCRAPER_HEADLESS_NO_SANDBOX=${SCRAPER_HEADLESS_NO_SANDBOX:-false}
       - SCRAPER_MAX_CONTENT_BYTES=${SCRAPER_MAX_CONTENT_BYTES:-400000}
-      - SCRAPER_USER_AGENT=${SCRAPER_USER_AGENT:-Mozilla/5.0 (compatible; PortfolioBot/1.0)}
+      - SCRAPER_USER_AGENT=${SCRAPER_USER_AGENT:-Mozilla/5.0 (compatible; ArachneBot/1.0)}
       - SCRAPER_RATE_LIMIT=${SCRAPER_RATE_LIMIT:-2}
       - SCRAPER_RATE_LIMIT_WINDOW=${SCRAPER_RATE_LIMIT_WINDOW:-1s}
       - SCRAPER_API_TOKEN=${SCRAPER_API_TOKEN}
@@ -165,7 +165,7 @@ services:
       - redis
     restart: unless-stopped
     networks:
-      - portfolio-network-prod
+      - arachne-network-prod
     healthcheck:
       test:
         [
@@ -210,7 +210,7 @@ services:
       --save 60 10000
     restart: unless-stopped
     networks:
-      - portfolio-network-prod
+      - arachne-network-prod
     healthcheck:
       test: ["CMD", "redis-cli", "ping"]
       interval: 30s
@@ -239,7 +239,7 @@ services:
       - redis
     restart: unless-stopped
     networks:
-      - ${DOCKER_NETWORK_NAME:-portfolio-network}-prod
+      - ${DOCKER_NETWORK_NAME:-arachne-network}-prod
     profiles:
       - monitoring
     deploy:
@@ -252,9 +252,9 @@ services:
           cpus: "0.25"
 
 networks:
-  portfolio-network-prod:
+  arachne-network-prod:
     external: true
-    name: portfolio-network-prod
+    name: arachne-network-prod
 
 volumes:
   redis_data_prod:

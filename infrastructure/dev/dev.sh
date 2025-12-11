@@ -1,10 +1,10 @@
 #!/bin/bash
 set -euo pipefail
 
-# Development script for the portfolio stack
+# Development script for the arachne stack
 # This script starts the services in development mode with live reloading
 
-echo "🚀 Starting portfolio stack in DEVELOPMENT mode..."
+echo "🚀 Starting arachne stack in DEVELOPMENT mode..."
 echo "   This will start all services with live reloading enabled"
 echo ""
 
@@ -31,7 +31,7 @@ echo ""
 echo "✅ Development stack successfully started!"
 echo ""
 echo "📱 Your services are now available at:"
-echo "   • Workfolio (Frontend):     http://localhost"
+echo "   • Web UI (Arachne):         http://localhost"
 echo "   • AI Backend API:           http://localhost/api/ai/health"
 echo "   • Arachne Scraper API:      http://localhost/api/scrape/health"
 echo "   • Direct AI Backend:        http://localhost:3001/health"
@@ -39,7 +39,7 @@ echo "   • Direct Arachne Service:   http://localhost:8080/health"
 echo ""
 echo "🔄 Live reloading is active for:"
 echo "   • AI Backend: Changes to server.js will restart the service"
-echo "   • Workfolio: React/Vite changes will hot-reload in the browser"
+echo "   • Web UI: Next.js changes will hot-reload in the browser"
 echo "   • Arachne: Go code changes will rebuild and restart the service"
 echo ""
 echo "💡 Development Tips:"

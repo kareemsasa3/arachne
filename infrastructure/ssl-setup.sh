@@ -1,11 +1,11 @@
 #!/bin/bash
 
-# SSL Certificate Setup Script for Portfolio Project
+# SSL Certificate Setup Script for Arachne Project
 # This script helps you set up SSL certificates for HTTPS
 
 set -euo pipefail
 
-echo "🔐 SSL Certificate Setup for Portfolio Project"
+echo "🔐 SSL Certificate Setup for Arachne Project"
 echo "=============================================="
 echo ""
 
