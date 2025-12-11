@@ -67,7 +67,7 @@ runs:
         if [ -z "$PORT" ]; then PORT=22; fi
         SSH_OPTS="-i ~/.ssh/id_ed25519 -o IdentitiesOnly=yes -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o ConnectTimeout=60 -o ConnectionAttempts=3 -o ServerAliveInterval=15 -o ServerAliveCountMax=4 -o PreferredAuthentications=publickey -o PubkeyAuthentication=yes -o IPQoS=none"
         echo "Syncing infrastructure/ to server..."
-        tar -czf - infrastructure | ssh $SSH_OPTS -p "$PORT" "$USER@$HOST" "mkdir -p ~/personal-website && tar -xzf - -C ~/personal-website"
+        tar -czf - infrastructure | ssh $SSH_OPTS -p "$PORT" "$USER@$HOST" "mkdir -p ~/arachne && tar -xzf - -C ~/arachne"
 
     - name: Deploy over SSH
       shell: bash
@@ -93,7 +93,7 @@ runs:
         # Prepare remote script once, then stream it to SSH (allows retries)
         cat > /tmp/remote_deploy.sh << 'RSCRIPT'
         set -e
-        cd "$HOME/personal-website"
+        cd "$HOME/arachne"
 
         echo "Disk usage before cleanup:" && df -h /
         echo "Docker disk usage before cleanup:" && docker system df || true
@@ -103,9 +103,9 @@ runs:
         echo "${{ inputs.ghcr_token }}" | docker login ghcr.io -u "${{ inputs.ghcr_username }}" --password-stdin
         trap 'rm -rf "$DOCKER_CONFIG_DIR"' EXIT
 
-        export WORKFOLIO_IMAGE=ghcr.io/${{ inputs.repository }}/workfolio:${{ inputs.sha }}
-        export AI_BACKEND_IMAGE=ghcr.io/${{ inputs.repository }}/ai:${{ inputs.sha }}
-        export ARACHNE_IMAGE=ghcr.io/${{ inputs.repository }}/arachne:${{ inputs.sha }}
+        export WEB_IMAGE=ghcr.io/${{ inputs.repository }}/web:${{ inputs.sha }}
+        export AI_IMAGE=ghcr.io/${{ inputs.repository }}/ai:${{ inputs.sha }}
+        export SCRAPER_IMAGE=ghcr.io/${{ inputs.repository }}/scraper:${{ inputs.sha }}
 
         # Note: rely on compose pull/up --pull always; no manual docker pull here
 
@@ -156,15 +156,15 @@ runs:
         # Override to force images (and null-out any build) so server never builds locally
         cat > /tmp/compose.images.override.yml << 'IMG'
         services:
-          workfolio:
+          web:
             build: null
-            image: ${WORKFOLIO_IMAGE}
+            image: ${WEB_IMAGE}
           ai:
             build: null
-            image: ${AI_BACKEND_IMAGE}
-          arachne:
+            image: ${AI_IMAGE}
+          scraper:
             build: null
-            image: ${ARACHNE_IMAGE}
+            image: ${SCRAPER_IMAGE}
         IMG
 
         cat > /tmp/compose.network.override.yml << 'OVR'
@@ -178,7 +178,7 @@ runs:
         # Bring stack down with same overrides to prevent name conflicts and stale containers
         $COMPOSE_CMD -f infrastructure/docker-compose.yml -f infrastructure/prod/docker-compose.prod.yml -f /tmp/compose.images.override.yml -f /tmp/compose.network.override.yml down --remove-orphans || true
         # Extra safety: remove any lingering conflicting containers by explicit names
-        docker rm -f portfolio-redis-prod portfolio-workfolio-prod portfolio-ai-prod portfolio-arachne-prod >/dev/null 2>&1 || true
+        docker rm -f portfolio-redis-prod portfolio-ai-prod portfolio-web-prod portfolio-scraper-prod >/dev/null 2>&1 || true
         # And remove any container matching portfolio-*-prod just in case
         CONFLICTING_CONTAINERS=$(docker ps -aq --filter name='^/portfolio-.*-prod$' || true)
         if [ -n "$CONFLICTING_CONTAINERS" ]; then
@@ -197,13 +197,14 @@ runs:
           curl -fsS -m 5 "https://$DOMAIN_NAME_VALUE/health" >/dev/null 2>&1 && ok=$((ok+1)) || true
           curl -fsS -m 5 "https://$DOMAIN_NAME_VALUE/api/ai/health" >/dev/null 2>&1 && ok=$((ok+1)) || true
           curl -fsS -m 5 "https://$DOMAIN_NAME_VALUE/api/scrape/health" >/dev/null 2>&1 && ok=$((ok+1)) || true
-          if [ "$ok" -eq 3 ]; then
+          curl -fsS -m 5 "https://$DOMAIN_NAME_VALUE/" >/dev/null 2>&1 && ok=$((ok+1)) || true
+          if [ "$ok" -eq 4 ]; then
             echo "All endpoints healthy."
             break
           fi
           sleep 5
         done
-        if [ "$ok" -ne 3 ]; then
+        if [ "$ok" -ne 4 ]; then
           echo "ERROR: One or more health checks failed at https://$DOMAIN_NAME_VALUE" >&2
           exit 1
         fi
@@ -212,8 +213,8 @@ runs:
         echo "Docker disk usage after cleanup:" && docker system df || true
 
         echo "Ensuring daily cert renewal cron job exists..."
-        CRON_LINE="0 3 * * * bash -lc 'PROJECT_DIR=\"$HOME/personal-website\" $HOME/personal-website/infrastructure/prod/renew-ssl.sh >> $HOME/personal-website/infrastructure/logs/certbot/cron.log 2>&1'"
-        (crontab -l 2>/dev/null || true) | grep -F "$HOME/personal-website/infrastructure/prod/renew-ssl.sh" >/dev/null 2>&1 || \
+        CRON_LINE="0 3 * * * bash -lc 'PROJECT_DIR=\"$HOME/arachne\" $HOME/arachne/infrastructure/prod/renew-ssl.sh >> $HOME/arachne/infrastructure/logs/certbot/cron.log 2>&1'"
+        (crontab -l 2>/dev/null || true) | grep -F "$HOME/arachne/infrastructure/prod/renew-ssl.sh" >/dev/null 2>&1 || \
         ( (crontab -l 2>/dev/null; echo "$CRON_LINE") | crontab - )
         echo "Cron entry ensured."
         RSCRIPT

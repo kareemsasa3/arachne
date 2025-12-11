@@ -21,18 +21,6 @@ jobs:
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
 
-      - name: Build workfolio image
-        uses: docker/build-push-action@v5
-        with:
-          context: ./services/workfolio
-          file: ./services/workfolio/Dockerfile
-          push: false
-          load: true
-          tags: workfolio:ci
-          build-args: |
-            VITE_TURNSTILE_SITE_KEY=${{ secrets.VITE_TURNSTILE_SITE_KEY }}
-            VITE_AI_URL=${{ secrets.VITE_AI_URL }}
-
       - name: Build ai image
         uses: docker/build-push-action@v5
         with:
@@ -40,6 +28,22 @@ jobs:
           push: false
           load: true
           tags: ai:ci
+
+      - name: Build scraper image
+        uses: docker/build-push-action@v5
+        with:
+          context: ./services/scraper
+          push: false
+          load: true
+          tags: scraper:ci
+
+      - name: Build web image
+        uses: docker/build-push-action@v5
+        with:
+          context: ./services/web
+          push: false
+          load: true
+          tags: web:ci
 
   docker-scan:
     runs-on: ubuntu-latest
@@ -56,24 +60,30 @@ jobs:
 
       - name: Build local images for scan
         run: |
-          docker build \
-            --build-arg VITE_TURNSTILE_SITE_KEY=${{ secrets.VITE_TURNSTILE_SITE_KEY }} \
-            --build-arg VITE_AI_URL=${{ secrets.VITE_AI_URL }} \
-            -t workfolio:scan ./services/workfolio
           docker build -t ai:scan ./services/ai
-
-      - name: Scan images with Trivy
-        uses: aquasecurity/trivy-action@0.24.0
-        with:
-          image-ref: "workfolio:scan"
-          format: "table"
-          exit-code: "0"
-          ignore-unfixed: true
+          docker build -t scraper:scan ./services/scraper
+          docker build -t web:scan ./services/web
 
       - name: Scan ai with Trivy
         uses: aquasecurity/trivy-action@0.24.0
         with:
           image-ref: "ai:scan"
+          format: "table"
+          exit-code: "0"
+          ignore-unfixed: true
+
+      - name: Scan scraper with Trivy
+        uses: aquasecurity/trivy-action@0.24.0
+        with:
+          image-ref: "scraper:scan"
+          format: "table"
+          exit-code: "0"
+          ignore-unfixed: true
+
+      - name: Scan web with Trivy
+        uses: aquasecurity/trivy-action@0.24.0
+        with:
+          image-ref: "web:scan"
           format: "table"
           exit-code: "0"
           ignore-unfixed: true
