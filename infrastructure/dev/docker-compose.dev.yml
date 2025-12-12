@@ -43,8 +43,8 @@ services:
       - SCRAPER_ENABLE_LOGGING=true
       - SCRAPER_LOG_LEVEL=debug
       - SCRAPER_MAX_CONCURRENT=3
-      - SCRAPER_REQUEST_TIMEOUT=40s
-      - SCRAPER_TOTAL_TIMEOUT=60s
+      - SCRAPER_REQUEST_TIMEOUT=90s
+      - SCRAPER_TOTAL_TIMEOUT=180s
       - SCRAPER_USE_HEADLESS=true
       - SCRAPER_MAX_CONTENT_BYTES=200000
       - SCRAPER_HEADLESS_NO_SANDBOX=true
@@ -56,7 +56,7 @@ services:
       # Path relative to CWD (infrastructure/), not to this file
       - ./dev/arachne.air.toml:/etc/air/air.toml:ro
     command: air -c /etc/air/air.toml
-    shm_size: "1gb"
+    shm_size: "2gb"
     ports:
       - "8080:8080"
 

@@ -140,7 +140,7 @@ export default function NewJobPage() {
     setIsSubmitting(true);
 
     try {
-      const response = await fetch(apiUrl('/api/scrape'), {
+      const response = await fetch(apiUrl('/api/arachne/scrape'), {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -453,7 +453,7 @@ export default function NewJobPage() {
                     onClick={async () => {
                       setRerunId(snap.id);
                       try {
-                        const res = await fetch(apiUrl('/api/scrape'), {
+                        const res = await fetch(apiUrl('/api/arachne/scrape'), {
                           method: 'POST',
                           headers: { 'Content-Type': 'application/json' },
                           body: JSON.stringify({ urls: [snap.url] }),

@@ -7,6 +7,7 @@ const links = [
   { href: '/chat', label: 'Chat' },
   { href: '/jobs', label: 'Jobs' },
   { href: '/history', label: 'History' },
+  { href: '/analytics', label: 'Analytics' },
   { href: '/search', label: 'Search' },
   { href: '/debug/db-viewer', label: 'DB Viewer' },
 ];

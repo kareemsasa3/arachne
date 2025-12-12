@@ -7,6 +7,7 @@ import ReactMarkdown from 'react-markdown';
 import { Trash2 } from 'lucide-react';
 import DOMPurify from 'isomorphic-dompurify';
 import GlassModal from '@/components/GlassModal';
+import { apiUrl } from '@/lib/api';
 
 type HistoryEntry = {
   id: string;
@@ -288,7 +289,7 @@ export default function HistoryDetailPage() {
         '';
       if (!content) throw new Error('No content available to summarize');
 
-      const aiResp = await fetch('/api/ai/summarize', {
+      const aiResp = await fetch(apiUrl('/api/ai/summarize'), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({

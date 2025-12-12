@@ -132,7 +132,7 @@ export default function HistoryPage() {
     setIsRescrapingId(snapshotId);
     
     try {
-      const response = await fetch(apiUrl('/api/scrape'), {
+      const response = await fetch(apiUrl('/api/arachne/scrape'), {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -259,7 +259,7 @@ export default function HistoryPage() {
         '';
       if (!content) throw new Error('No content available to summarize');
 
-      const aiResp = await fetch('/api/ai/summarize', {
+      const aiResp = await fetch(apiUrl('/api/ai/summarize'), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({

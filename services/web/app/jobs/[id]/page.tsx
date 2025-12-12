@@ -135,7 +135,7 @@ export default function JobStatusPage() {
 
     try {
       console.log(`Generating streaming AI summary for job ${jobId}...`);
-      const response = await fetch(apiUrl('/api/summarize'), {
+      const response = await fetch(apiUrl('/api/ai/summarize/stream'), {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -281,7 +281,7 @@ export default function JobStatusPage() {
               <p className="mb-2 text-sm font-semibold text-red-100/90">Debug Information:</p>
               <ul className="space-y-1 text-xs text-red-50/80">
                 <li>• Job ID: <code className="rounded bg-white/10 px-1">{jobId}</code></li>
-                <li>• API Endpoint: <code className="rounded bg-white/10 px-1">/api/scrape/status?id={jobId}</code></li>
+                <li>• API Endpoint: <code className="rounded bg-white/10 px-1">/api/arachne/scrape/status?id={jobId}</code></li>
                 <li>• Check the browser console for more details</li>
                 <li>• Make sure the Arachne backend is running on port 8080</li>
               </ul>

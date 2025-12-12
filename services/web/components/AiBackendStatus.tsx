@@ -13,7 +13,7 @@ export default function AiBackendStatus() {
 
     const check = async () => {
       try {
-        const res = await fetch(apiUrl('/api/ai-health'), { cache: 'no-store' });
+        const res = await fetch(apiUrl('/api/ai/health'), { cache: 'no-store' });
         if (cancelled) return;
         setStatus(res.ok ? 'up' : 'down');
       } catch {

@@ -68,7 +68,7 @@ export function useJobStatus(initialJobId?: string, pollIntervalMs: number = DEF
     async (id: string) => {
       setIsLoading(true);
       try {
-        const response = await fetch(apiUrl(`/api/scrape/status?id=${encodeURIComponent(id)}`), {
+        const response = await fetch(apiUrl(`/api/arachne/scrape/status?id=${encodeURIComponent(id)}`), {
           cache: 'no-store',
         });
 

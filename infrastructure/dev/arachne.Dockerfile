@@ -2,7 +2,7 @@
 # Dev image for Arachne with live-reload (air) and Chromium
 # Pattern: root user, bind-mounted code from host, hot reload via Air
 
-FROM golang:1.23-alpine
+FROM golang:1.23-alpine3.19
 
 # Install dependencies for headless Chromium, SQLite FTS5 (via CGO), and build tools
 RUN apk --no-cache add \

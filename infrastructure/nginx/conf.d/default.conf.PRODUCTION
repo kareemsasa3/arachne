@@ -90,6 +90,11 @@ server {
         proxy_set_header X-Real-IP $remote_addr;
         proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
         proxy_set_header X-Forwarded-Proto $scheme;
+        proxy_connect_timeout 60s;
+        proxy_send_timeout 600s;
+        proxy_read_timeout 600s;
+        proxy_buffering off;
+        proxy_request_buffering off;
         
         # CORS headers (same-origin by default)
         add_header Access-Control-Allow-Origin $scheme://$host always;
@@ -108,16 +113,21 @@ server {
         }
     }
 
-    # Arachne scraping API
-    location /api/scrape/ {
+    # Arachne scraper API (strip /api/arachne prefix; allow streaming/timeouts)
+    location /api/arachne/ {
         limit_req zone=scraper burst=10 nodelay;
-        rewrite ^/api/scrape(/.*)$ $1 break;
+        rewrite ^/api/arachne(/.*)$ $1 break;
         proxy_pass http://scraper:8080;
         proxy_set_header Host $host;
         proxy_set_header X-Real-IP $remote_addr;
         proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
         proxy_set_header X-Forwarded-Proto $scheme;
-        
+        proxy_connect_timeout 60s;
+        proxy_send_timeout 600s;
+        proxy_read_timeout 600s;
+        proxy_buffering off;
+        proxy_request_buffering off;
+
         # CORS headers (same-origin by default)
         add_header Access-Control-Allow-Origin $scheme://$host always;
         add_header Vary Origin always;
@@ -133,15 +143,6 @@ server {
             add_header Content-Length 0;
             return 204;
         }
-    }
-
-    # Arachne health and metrics
-    location /api/arachne/ {
-        proxy_pass http://scraper:8080/;
-        proxy_set_header Host $host;
-        proxy_set_header X-Real-IP $remote_addr;
-        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-        proxy_set_header X-Forwarded-Proto $scheme;
     }
 
     # Redis Commander (optional management UI)
