@@ -60,13 +60,13 @@ const renderDiffLines = (diff: string) => {
   const lines = diff.split('\n');
   return lines.map((line, idx) => {
     const trimmed = line || ' ';
-    let color = 'text-gray-800';
+    let color = 'text-slate-200';  // Changed from text-gray-800
     if (trimmed.startsWith('+')) {
-      color = 'text-green-700';
+      color = 'text-green-400';    // Changed from text-green-700
     } else if (trimmed.startsWith('-')) {
-      color = 'text-red-700';
+      color = 'text-red-400';      // Changed from text-red-700
     } else if (trimmed.startsWith('@@')) {
-      color = 'text-indigo-700';
+      color = 'text-indigo-400';   // Changed from text-indigo-700
     }
 
     return (
@@ -85,7 +85,12 @@ export default function HistoryDetailPage() {
   const [history, setHistory] = useState<HistoryEntry[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [diffs, setDiffs] = useState<Record<string, { loading: boolean; data?: DiffResult; error?: string }>>({});
+  const [diffs, setDiffs] = useState<Record<string, { 
+    loading: boolean; 
+    data?: DiffResult; 
+    error?: string;
+    collapsed?: boolean;
+  }>>({});
   const [analyses, setAnalyses] = useState<Record<string, { loading: boolean; text?: string; error?: string }>>({});
   const [selectedVersion, setSelectedVersion] = useState<VersionDetail | null>(null);
   const [isDetailLoading, setIsDetailLoading] = useState(false);
@@ -94,6 +99,7 @@ export default function HistoryDetailPage() {
   const [savingIds, setSavingIds] = useState<Record<string, boolean>>({});
   const [failedSaveIds, setFailedSaveIds] = useState<Record<string, boolean>>({});
   const [versionViewMode, setVersionViewMode] = useState<'text' | 'preview'>('text');
+  const [summaryViewState, setSummaryViewState] = useState<Record<string, { collapsed: boolean }>>({});
   const panelClass =
     'rounded-lg border border-white/10 bg-white/5 shadow-sm backdrop-blur-sm supports-[backdrop-filter]:backdrop-blur-sm';
 
@@ -148,7 +154,14 @@ export default function HistoryDetailPage() {
         throw new Error(`Failed to fetch diff (${res.status})`);
       }
       const data: DiffResult = await res.json();
-      setDiffs((prev) => ({ ...prev, [entryId]: { loading: false, data: data } }));
+      setDiffs((prev) => ({ 
+        ...prev, 
+        [entryId]: { 
+          loading: false, 
+          data: data,
+          collapsed: false
+        } 
+      }));
     } catch (err) {
       setDiffs((prev) => ({
         ...prev,
@@ -580,20 +593,44 @@ export default function HistoryDetailPage() {
 
                   {entry.summary ? (
                     <div className="mt-3 bg-blue-500/10 border border-blue-200/40 rounded-lg p-3 text-sm text-white/90 backdrop-blur-sm supports-[backdrop-filter]:backdrop-blur-sm">
-                      <div className="font-medium text-blue-100 mb-1">Summary:</div>
-                      <div className="prose prose-sm text-white/90">
-                        <ReactMarkdown>{entry.summary}</ReactMarkdown>
+                      <div className="flex items-center justify-between mb-2">
+                        <div className="font-medium text-blue-100">Summary:</div>
+                        <button
+                          onClick={() => {
+                            setSummaryViewState(prev => ({
+                              ...prev,
+                              [entry.id]: {
+                                collapsed: !prev[entry.id]?.collapsed
+                              }
+                            }));
+                          }}
+                          className="px-2 py-0.5 text-xs bg-blue-500/20 hover:bg-blue-500/30 rounded border border-blue-300/30 text-blue-100 transition-colors"
+                        >
+                          {summaryViewState[entry.id]?.collapsed ? 'Expand' : 'Collapse'}
+                        </button>
                       </div>
-                      {failedSaveIds[entry.id] && (
-                        <div className="mt-2 flex items-center gap-2 text-xs text-red-200">
-                          <span>Save to memory failed.</span>
-                          <button
-                            onClick={() => saveSummary(entry.id, entry.summary || '')}
-                            disabled={savingIds[entry.id]}
-                            className="inline-flex items-center gap-1 px-2 py-1 rounded bg-red-500/20 border border-red-300/30 text-red-100 disabled:opacity-60"
-                          >
-                            {savingIds[entry.id] ? 'Retrying…' : 'Retry save'}
-                          </button>
+
+                      {!summaryViewState[entry.id]?.collapsed ? (
+                        <>
+                          <div className="prose prose-sm text-white/90">
+                            <ReactMarkdown>{entry.summary}</ReactMarkdown>
+                          </div>
+                          {failedSaveIds[entry.id] && (
+                            <div className="mt-2 flex items-center gap-2 text-xs text-red-200">
+                              <span>Save to memory failed.</span>
+                              <button
+                                onClick={() => saveSummary(entry.id, entry.summary || '')}
+                                disabled={savingIds[entry.id]}
+                                className="inline-flex items-center gap-1 px-2 py-1 rounded bg-red-500/20 border border-red-300/30 text-red-100 disabled:opacity-60"
+                              >
+                                {savingIds[entry.id] ? 'Retrying…' : 'Retry save'}
+                              </button>
+                            </div>
+                          )}
+                        </>
+                      ) : (
+                        <div className="prose prose-sm text-white/60 line-clamp-2">
+                          <ReactMarkdown>{entry.summary}</ReactMarkdown>
                         </div>
                       )}
                     </div>
@@ -643,19 +680,44 @@ export default function HistoryDetailPage() {
                         <p className="text-sm text-red-300">{diffState.error}</p>
                       )}
                       {diffState.data && (
-                        <div className="space-y-2">
-                          <div className="flex items-center gap-3 text-xs text-white/70">
-                            <span className="font-mono bg-white/10 border border-white/20 rounded px-2 py-1 text-white">
-                              +{diffState.data.lines_added} / -{diffState.data.lines_removed}
-                            </span>
-                            <span className="text-white/60">
-                              {new Date(diffState.data.from_timestamp).toLocaleString()} →{' '}
-                              {new Date(diffState.data.to_timestamp).toLocaleString()}
-                            </span>
+                        <div className="mt-2 bg-black/30 rounded p-3 text-xs border border-white/10">
+                          {/* Diff Header with Collapse Button */}
+                          <div className="flex items-center justify-between mb-2">
+                            <div className="flex items-center gap-3 text-white/70">
+                              <span className="font-semibold text-white/80">Changes</span>
+                              <span className="font-mono bg-white/10 border border-white/20 rounded px-2 py-0.5 text-white/90">
+                                +{diffState.data.lines_added} / -{diffState.data.lines_removed}
+                              </span>
+                            </div>
+                            <button
+                              onClick={() => {
+                                setDiffs(prev => ({
+                                  ...prev,
+                                  [entry.id]: {
+                                    ...prev[entry.id],
+                                    collapsed: !prev[entry.id]?.collapsed
+                                  }
+                                }));
+                              }}
+                              className="px-3 py-1 text-xs bg-white/10 hover:bg-white/20 rounded border border-white/20 text-white transition-colors"
+                            >
+                              {diffState.collapsed ? 'Expand' : 'Collapse'}
+                            </button>
                           </div>
-                          <div className="bg-slate-900/40 border border-slate-200/20 rounded p-3 overflow-x-auto">
-                            <div className="space-y-0.5">{renderDiffLines(diffState.data.diff)}</div>
-                          </div>
+                          
+                          {/* Diff Content - Conditionally Rendered or Preview */}
+                          {!diffState.collapsed ? (
+                            <div className="bg-slate-900/40 border border-slate-200/20 rounded p-3 overflow-x-auto space-y-0.5">
+                              {renderDiffLines(diffState.data.diff)}
+                            </div>
+                          ) : (
+                            <div className="bg-slate-900/40 border border-slate-200/20 rounded p-2 overflow-hidden opacity-70">
+                              <div className="space-y-0.5 max-h-[4.5em] overflow-hidden relative">
+                                {renderDiffLines(diffState.data.diff.split('\n').slice(0, 3).join('\n'))}
+                                <div className="absolute inset-0 bg-gradient-to-b from-transparent to-slate-900/10 pointer-events-none" />
+                              </div>
+                            </div>
+                          )}
                         </div>
                       )}
                     </div>

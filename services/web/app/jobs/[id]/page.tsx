@@ -135,6 +135,18 @@ export default function JobStatusPage() {
 
     try {
       console.log(`Generating streaming AI summary for job ${jobId}...`);
+      
+      // Extract content from results
+      // We'll prioritize content that exists, and join multiple results if present
+      const contentParts = job.results
+        .filter(r => r.content && r.content.trim().length > 0)
+        .map(r => `--- Result from ${r.url} ---\n${r.content}`);
+      
+      const content = contentParts.join('\n\n');
+      
+      // Use the first result's metadata as primary
+      const primaryResult = job.results[0];
+
       const response = await fetch(apiUrl('/api/ai/summarize/stream'), {
         method: 'POST',
         headers: {
@@ -142,7 +154,9 @@ export default function JobStatusPage() {
         },
         body: JSON.stringify({
           jobId: job.id,
-          results: job.results,
+          content, // Send the actual content string
+          url: job.request.site_url || primaryResult?.url,
+          title: primaryResult?.title,
           stream: true, // Enable streaming
         }),
       });
