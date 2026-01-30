@@ -43,33 +43,39 @@ resp_code="$(curl -sS -o /tmp/arachne-scheduled-scrapes.out -w "%{http_code}" \
 body="$(cat /tmp/arachne-scheduled-scrapes.out 2>/dev/null || true)"
 
 if [[ "$resp_code" == "202" ]]; then
-  job_id="$(python - <<PY
-import json, sys
+  job_id="$(
+python - <<'PY'
+import json
+import sys
+from pathlib import Path
 try:
-  print(json.loads(sys.argv[1]).get("job_id",""))
+    data = json.loads(Path("/tmp/arachne-scheduled-scrapes.out").read_text(encoding="utf-8"))
+    print(data.get("job_id", ""))
 except Exception:
-  print("")
+    try:
+        raw = Path("/tmp/arachne-scheduled-scrapes.out").read_text(encoding="utf-8")
+    except Exception:
+        raw = ""
+    raw = raw.replace("\n", " ")
+    if len(raw) > 200:
+        raw = raw[:200] + "...(truncated)"
+    if raw:
+        print("[WARN] scheduled scrapes accepted but response JSON malformed (job_id unavailable): "
+              f"{raw}", file=sys.stderr)
+    else:
+        print("[WARN] scheduled scrapes accepted but response JSON malformed (job_id unavailable)",
+              file=sys.stderr)
+    print("")
 PY
-"$body")"
+  )"
 
   echo "[OK] scheduled scrapes accepted: count=${#urls[@]} job_id=${job_id:-unknown} http=$resp_code"
 
   if command -v erebus >/dev/null 2>&1; then
     erebus emit --best-effort --source-name arachne.scheduler --type arachne.scrape.accepted \
-      --payload "{\"count\":${#urls[@]},\"job_id\":\"${job_id:-}\",\"http\":$resp_code}" >/dev/null 2>&1 || true
+      --payload "{\"count\":${#urls[@]},\"job_id\":\"${job_id}\",\"http\":$resp_code}" >/dev/null 2>&1 || true
   fi
   exit 0
-fi
-
-echo "[FAIL] scheduled scrapes rejected: http=$resp_code body=$(echo "$body" | tr '\n' ' ' | head -c 500)" >&2
-
-if command -v erebus >/dev/null 2>&1; then
-  esc="$(python - <<'PY'
-import json, os
-print(json.dumps({"http": int(os.environ["HTTP"]), "body": os.environ["BODY"][:500]}))
-PY
-)"
-  # (keeping it simple; failure emit is optional—can skip if you prefer)
 fi
 
 exit 1

@@ -69,7 +69,10 @@ services:
     container_name: arachne-scraper
     # Chrome requires adequate shared memory for rendering
     shm_size: '2gb'
+    volumes:
+      - /var/lib/arachne/scraper:/app/data
     environment:
+      - SCRAPER_DB_PATH=${SCRAPER_DB_PATH:-/app/data/snapshots.db}
       - SCRAPER_REDIS_ADDR=${SCRAPER_REDIS_ADDR:-redis:6379}
       - SCRAPER_REDIS_DB=${SCRAPER_REDIS_DB:-0}
       - SCRAPER_ENABLE_METRICS=${SCRAPER_ENABLE_METRICS:-true}

@@ -165,9 +165,56 @@ write_nginx_default_conf() {
   log "Generating nginx config: ${NGINX_CONF_FILE}"
   sed \
     -e 's/^\s*listen\s\+.*;/    listen 80;/' \
-    -e 's/proxy_pass http:\/\/web:3002;/proxy_pass http:\/\/web:3000;/' \
+    -e 's#http://web:3002#http://web:3000#g' \
     "${template}" > "${NGINX_CONF_FILE}"
   chmod 0644 "${NGINX_CONF_FILE}"
+}
+
+smoke_check_nginx_conf() {
+  log "Smoke test: nginx rendered config sanity"
+
+  # 1) no stale upstreams
+  if grep -q 'http://web:3002' "${NGINX_CONF_FILE}"; then
+    err "nginx config still references web:3002:"
+    grep -n 'http://web:3002' "${NGINX_CONF_FILE}" || true
+    exit 1
+  fi
+
+  # 2) ensure expected upstream exists
+  if ! grep -q 'http://web:3000' "${NGINX_CONF_FILE}"; then
+    err "nginx config does not reference web:3000 (unexpected):"
+    grep -n 'proxy_pass http://web:' "${NGINX_CONF_FILE}" || true
+    exit 1
+  fi
+
+  # 2b) no other web upstream ports allowed
+  if grep -nE 'proxy_pass http://web:' "${NGINX_CONF_FILE}" | \
+    grep -vq 'http://web:3000'; then
+    err "nginx config contains unexpected web upstream (expected only web:3000):"
+    grep -nE 'proxy_pass http://web:' "${NGINX_CONF_FILE}" || true
+    exit 1
+  fi
+
+  # 3) optional: validate nginx config via container (best-effort)
+  local nginx_cid
+  nginx_cid="$(
+    /usr/bin/docker compose -p "${APP_NAME}" --env-file "${ENV_FILE}" \
+      -f "${SYSTEM_COMPOSE_FILE}" \
+      -f "${NETWORK_OVERRIDE_FILE}" \
+      -f "${RUNTIME_OVERRIDE_FILE}" \
+      ps -q nginx 2>/dev/null || true
+  )"
+  if [[ -n "${nginx_cid}" ]]; then
+    log "Smoke test: nginx -t inside container (best-effort)"
+    /usr/bin/docker exec "${nginx_cid}" nginx -t >/dev/null 2>&1 || {
+      err "nginx -t failed in container. Dumping relevant lines:"
+      /usr/bin/docker exec "${nginx_cid}" nginx -T 2>/dev/null | \
+        grep -nE 'proxy_pass|listen|server \{' | head -n 200 || true
+      exit 1
+    }
+  else
+    warn "nginx container not found yet; skipping nginx -t"
+  fi
 }
 
 write_network_override() {
@@ -210,8 +257,11 @@ sync_code() {
 
 ensure_data_dirs() {
   log "Ensuring data dirs: ${DATA_DIR}"
-  mkdir -p "${DATA_DIR}"
+  mkdir -p "${DATA_DIR}/scraper"
+  chmod 755 "${DATA_DIR}/scraper"
   chown -R root:root "${DATA_DIR}"
+  # Scraper runs as appuser (uid/gid 1001) inside the container.
+  chown -R 1001:1001 "${DATA_DIR}/scraper"
 }
 
 compose_smoke_test() {
@@ -221,6 +271,8 @@ compose_smoke_test() {
   log "Bringing stack up (systemd will own it afterward)"
   systemctl daemon-reload
   systemctl enable --now "${APP_NAME}.service"
+
+  smoke_check_nginx_conf
 
   log "Waiting briefly for nginx/health (best-effort)"
   sleep 2
@@ -290,6 +342,7 @@ main() {
   write_emitter
   init_env_file
   write_nginx_default_conf
+  smoke_check_nginx_conf
   write_network_override
   write_runtime_override
   write_systemd_unit
