@@ -1,6 +1,6 @@
 [submodule "services/ai"]
 	path = services/ai
-	url = https://github.com/kareemsasa3/nexus.git
+	url = git@github.com:kareemsasa3/nexus.git
 [submodule "services/scraper"]
 	path = services/scraper
 	url = git@github.com:kareemsasa3/scraper.git
