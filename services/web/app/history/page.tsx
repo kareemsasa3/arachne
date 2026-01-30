@@ -49,6 +49,9 @@ export default function HistoryPage() {
   const [failedSaveIds, setFailedSaveIds] = useState<Set<string>>(new Set());
   const panelClass =
     'rounded-lg border border-white/10 bg-white/5 shadow-sm backdrop-blur-sm supports-[backdrop-filter]:backdrop-blur-sm';
+  const scraperBase = (process.env.NEXT_PUBLIC_SCRAPER_API_URL || '/api/arachne')
+    .trim()
+    .replace(/\/$/, '');
 
   const fetchHistory = useCallback(async (newOffset: number = 0) => {
     try {
@@ -56,7 +59,7 @@ export default function HistoryPage() {
       setError(null);
       
       const response = await fetch(
-        `${process.env.NEXT_PUBLIC_SCRAPER_API_URL || 'http://localhost:8080'}/memory/recent?limit=${limit}&offset=${newOffset}`,
+        `${scraperBase}/memory/recent?limit=${limit}&offset=${newOffset}`,
         { cache: 'no-store' }
       );
 
@@ -103,7 +106,7 @@ export default function HistoryPage() {
     
     try {
       const response = await fetch(
-        `${process.env.NEXT_PUBLIC_SCRAPER_API_URL || 'http://localhost:8080'}/memory/lookup?url=${encodeURIComponent(snapshot.url)}`,
+        `${scraperBase}/memory/lookup?url=${encodeURIComponent(snapshot.url)}`,
         { cache: 'no-store' }
       );
 
@@ -185,7 +188,7 @@ export default function HistoryPage() {
     setDeletingId(id);
     try {
       const res = await fetch(
-        `${process.env.NEXT_PUBLIC_SCRAPER_API_URL || 'http://localhost:8080'}/memory/version/${id}`,
+        `${scraperBase}/memory/version/${id}`,
         { method: 'DELETE' },
       );
       if (!res.ok) {
@@ -208,12 +211,11 @@ export default function HistoryPage() {
       return next;
     });
     try {
-      const scraperUrl = process.env.NEXT_PUBLIC_SCRAPER_API_URL || 'http://localhost:8080';
       const token = process.env.NEXT_PUBLIC_SCRAPER_API_TOKEN;
       const headers: Record<string, string> = { 'Content-Type': 'application/json' };
       if (token) headers['Authorization'] = `Bearer ${token}`;
 
-      const resp = await fetch(`${scraperUrl}/memory/snapshot/${snapshotId}/summary`, {
+      const resp = await fetch(`${scraperBase}/memory/snapshot/${snapshotId}/summary`, {
         method: 'PATCH',
         headers,
         body: JSON.stringify({ summary }),
@@ -247,7 +249,7 @@ export default function HistoryPage() {
     try {
       // Fetch full snapshot content for summarization
       const detailResp = await fetch(
-        `${process.env.NEXT_PUBLIC_SCRAPER_API_URL || 'http://localhost:8080'}/memory/lookup?url=${encodeURIComponent(snapshot.url)}`,
+        `${scraperBase}/memory/lookup?url=${encodeURIComponent(snapshot.url)}`,
         { cache: 'no-store' }
       );
       if (!detailResp.ok) throw new Error('Failed to load snapshot content');

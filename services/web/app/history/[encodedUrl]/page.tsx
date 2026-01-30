@@ -54,7 +54,9 @@ type VersionDetail = {
   status_code: number;
 };
 
-const apiBase = process.env.NEXT_PUBLIC_SCRAPER_API_URL || 'http://localhost:8080';
+const apiBase = (process.env.NEXT_PUBLIC_SCRAPER_API_URL || '/api/arachne')
+  .trim()
+  .replace(/\/$/, '');
 
 const renderDiffLines = (diff: string) => {
   const lines = diff.split('\n');

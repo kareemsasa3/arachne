@@ -20,10 +20,8 @@ export default function SearchPage() {
   const [error, setError] = useState<string | null>(null);
 
   const arachneUrl = useMemo(() => {
-    const envUrl = (process.env.NEXT_PUBLIC_SCRAPER_API_URL || '').trim();
-    const fallback = 'http://localhost:8080';
-    const base = envUrl || fallback;
-    return base.replace(/\/$/, '');
+    const envUrl = (process.env.NEXT_PUBLIC_SCRAPER_API_URL || '/api/arachne').trim();
+    return envUrl.replace(/\/$/, '');
   }, []);
 
   const handleSearch = async () => {

@@ -70,19 +70,20 @@ export default function AnalyticsPage() {
   const [retryCount, setRetryCount] = useState(0);
   const panelClass =
     'rounded-xl border border-white/10 bg-white/5 shadow-lg backdrop-blur-md supports-[backdrop-filter]:backdrop-blur-md';
+  const scraperBase = (process.env.NEXT_PUBLIC_SCRAPER_API_URL || '/api/arachne')
+    .trim()
+    .replace(/\/$/, '');
 
   useEffect(() => {
     const fetchAnalytics = async () => {
       setLoading(true);
       setFetchError(null);
       try {
-        const scraperUrl = process.env.NEXT_PUBLIC_SCRAPER_API_URL || 'http://localhost:8080';
-
         const [summaryRes, timeSeriesRes, domainsRes, recentRes] = await Promise.all([
-          fetch(`${scraperUrl}/api/v1/analytics/summary`),
-          fetch(`${scraperUrl}/api/v1/analytics/timeseries?days=${timeRange}`),
-          fetch(`${scraperUrl}/api/v1/analytics/domains?limit=10`),
-          fetch(`${scraperUrl}/api/v1/analytics/recent?limit=20`),
+          fetch(`${scraperBase}/api/v1/analytics/summary`),
+          fetch(`${scraperBase}/api/v1/analytics/timeseries?days=${timeRange}`),
+          fetch(`${scraperBase}/api/v1/analytics/domains?limit=10`),
+          fetch(`${scraperBase}/api/v1/analytics/recent?limit=20`),
         ]);
 
         if (!summaryRes.ok || !timeSeriesRes.ok || !domainsRes.ok || !recentRes.ok) {

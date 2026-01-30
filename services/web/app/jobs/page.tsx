@@ -28,6 +28,9 @@ export default function NewJobPage() {
   const [rerunId, setRerunId] = useState<string | null>(null);
   const panelClass =
     'rounded-lg border border-white/10 bg-white/5 shadow-sm backdrop-blur-sm supports-[backdrop-filter]:backdrop-blur-sm';
+  const scraperBase = (process.env.NEXT_PUBLIC_SCRAPER_API_URL || '/api/arachne')
+    .trim()
+    .replace(/\/$/, '');
 
   const parseUrls = (input: string) => {
     const lines = input
@@ -58,7 +61,7 @@ export default function NewJobPage() {
       try {
         setRecentError(null);
         const res = await fetch(
-          `${process.env.NEXT_PUBLIC_SCRAPER_API_URL || 'http://localhost:8080'}/memory/recent?limit=5&offset=0`,
+          `${scraperBase}/memory/recent?limit=5&offset=0`,
           { cache: 'no-store' }
         );
         if (!res.ok) {

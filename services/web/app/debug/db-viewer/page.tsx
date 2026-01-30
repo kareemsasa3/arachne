@@ -37,7 +37,9 @@ type Diagnostic = {
   message: string;
 };
 
-const BACKEND_BASE = process.env.NEXT_PUBLIC_SCRAPER_API_URL || 'http://localhost:8080';
+const BACKEND_BASE = (process.env.NEXT_PUBLIC_SCRAPER_API_URL || '/api/arachne')
+  .trim()
+  .replace(/\/$/, '');
 
 const ALLOWED_TAGS = [
   'p',
