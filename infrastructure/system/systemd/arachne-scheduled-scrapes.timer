@@ -1,0 +1,10 @@
+[Unit]
+Description=Run Arachne scheduled scrapes
+
+[Timer]
+OnCalendar=hourly
+Persistent=true
+RandomizedDelaySec=2m
+
+[Install]
+WantedBy=timers.target

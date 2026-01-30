@@ -96,6 +96,17 @@ WantedBy=multi-user.target
 EOF
 }
 
+install_scheduler_units() {
+  log "Installing scheduler systemd unit + timer"
+  install -Dm0644 "${INSTALL_DIR}/infrastructure/system/systemd/arachne-scheduled-scrapes.service" \
+    /etc/systemd/system/arachne-scheduled-scrapes.service
+  install -Dm0644 "${INSTALL_DIR}/infrastructure/system/systemd/arachne-scheduled-scrapes.timer" \
+    /etc/systemd/system/arachne-scheduled-scrapes.timer
+
+  systemctl daemon-reload
+  systemctl enable --now arachne-scheduled-scrapes.timer
+}
+
 init_env_file() {
   mkdir -p "${ENV_DIR}"
   chmod 750 "${ENV_DIR}"
@@ -281,9 +292,9 @@ main() {
   write_nginx_default_conf
   write_network_override
   write_runtime_override
-
   write_systemd_unit
   compose_smoke_test
+  install_scheduler_units
 
   log "Installed. Useful commands:"
   log "  sudo systemctl status arachne.service --no-pager"

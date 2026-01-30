@@ -1,0 +1,9 @@
+[Unit]
+Description=Arachne scheduled scrapes (oneshot)
+Wants=network-online.target
+After=network-online.target
+
+[Service]
+Type=oneshot
+Environment=ARACHNE_BASE_URL=http://127.0.0.1:8787
+ExecStart=/opt/arachne/infrastructure/system/schedules/run-scheduled-scrapes.sh
