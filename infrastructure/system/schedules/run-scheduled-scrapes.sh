@@ -13,6 +13,34 @@ if [[ ! -f "$SITES_FILE" ]]; then
   exit 1
 fi
 
+probe_ok() {
+  local probe_url
+  if [[ -n "${ARACHNE_HEALTH_URL:-}" ]]; then
+    probe_url="$ARACHNE_HEALTH_URL"
+  else
+    probe_url="${BASE_URL}/"
+  fi
+  code="$(curl -sS -o /dev/null -w "%{http_code}" -m 2 --connect-timeout 1 "$probe_url" || true)"
+  [[ "$code" != "000" && -n "$code" ]]
+}
+
+# Wait briefly for API to come up (e.g. after boot)
+for i in {1..6}; do
+  if probe_ok; then
+    break
+  fi
+  sleep 5
+done
+
+if ! probe_ok; then
+  echo "[WARN] Arachne API unavailable at ${BASE_URL}; skipping scheduled scrapes."
+  if command -v erebus >/dev/null 2>&1; then
+    erebus emit --best-effort --source-name arachne.scheduler --type arachne.scrape.skipped \
+      --payload "{\"reason\":\"api_unavailable\",\"base_url\":\"${BASE_URL}\"}" >/dev/null 2>&1 || true
+  fi
+  exit 0
+fi
+
 urls=()
 while IFS= read -r raw || [[ -n "$raw" ]]; do
   line="$(echo "$raw" | sed -e 's/#.*$//' -e 's/^[[:space:]]*//' -e 's/[[:space:]]*$//')"
@@ -35,25 +63,43 @@ print(json.dumps({"urls": urls}))
 PY
 )"
 
-resp_code="$(curl -sS -o /tmp/arachne-scheduled-scrapes.out -w "%{http_code}" \
-  -X POST "$SCRAPE_ENDPOINT" \
-  -H "Content-Type: application/json" \
-  --data "$payload" || true)"
+tmp_out="$(mktemp /tmp/arachne-scheduled-scrapes.XXXXXX.out)"
+trap 'rm -f "$tmp_out"' EXIT
+export ARACHNE_TMP_OUT="$tmp_out"
+curl_rc=0
+resp_code="$(
+  curl -sS -o "$tmp_out" -w "%{http_code}" \
+    -m 10 --connect-timeout 2 \
+    -X POST "$SCRAPE_ENDPOINT" \
+    -H "Content-Type: application/json" \
+    --data "$payload"
+)" || curl_rc=$?
 
-body="$(cat /tmp/arachne-scheduled-scrapes.out 2>/dev/null || true)"
+# If curl failed (network/conn refused/etc), skip (timer will try again later)
+if [[ "${curl_rc}" -ne 0 ]]; then
+  echo "[WARN] curl failed (rc=${curl_rc}) posting to ${SCRAPE_ENDPOINT}; skipping."
+  if command -v erebus >/dev/null 2>&1; then
+    erebus emit --best-effort --source-name arachne.scheduler --type arachne.scrape.skipped \
+      --payload "{\"reason\":\"curl_failed\",\"curl_rc\":${curl_rc},\"endpoint\":\"${SCRAPE_ENDPOINT}\"}" \
+      >/dev/null 2>&1 || true
+  fi
+  exit 0
+fi
+
+body="$(cat "$tmp_out" 2>/dev/null || true)"
 
 if [[ "$resp_code" == "202" ]]; then
   job_id="$(
 python - <<'PY'
-import json
+import json, os
 import sys
 from pathlib import Path
 try:
-    data = json.loads(Path("/tmp/arachne-scheduled-scrapes.out").read_text(encoding="utf-8"))
+    data = json.loads(Path(os.environ["ARACHNE_TMP_OUT"]).read_text(encoding="utf-8"))
     print(data.get("job_id", ""))
 except Exception:
     try:
-        raw = Path("/tmp/arachne-scheduled-scrapes.out").read_text(encoding="utf-8")
+        raw = Path(os.environ["ARACHNE_TMP_OUT"]).read_text(encoding="utf-8")
     except Exception:
         raw = ""
     raw = raw.replace("\n", " ")
@@ -78,4 +124,9 @@ PY
   exit 0
 fi
 
+body="${body//$'\n'/ }"
+if [[ ${#body} -gt 300 ]]; then
+  body="${body:0:300}...(truncated)"
+fi
+echo "[ERR] scheduled scrapes rejected: http=${resp_code:-unknown} body=${body:-<empty>}" >&2
 exit 1

@@ -1,6 +1,8 @@
 # Arachne scheduled scrapes (one URL per line)
 # Lines starting with # are comments
-
 https://news.ycombinator.com/
 # https://arstechnica.com/
 # https://www.reuters.com/technology/
+
+# Federal Register — AECA §36(b) arms sales notifications
+https://www.federalregister.gov/api/v1/documents.json?per_page=20&order=newest&conditions[term]=arms+sales+notification
