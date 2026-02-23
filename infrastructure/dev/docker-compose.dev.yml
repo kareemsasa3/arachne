@@ -10,6 +10,7 @@ services:
   # AI Backend - Node.js with nodemon hot reload
   ai:
     container_name: arachne-ai-dev
+    restart: unless-stopped
     build:
       context: ../services/ai
       dockerfile: Dockerfile.dev
@@ -32,6 +33,7 @@ services:
   # Arachne - Go with Air hot reload
   scraper:
     container_name: arachne-scraper-dev
+    restart: unless-stopped
     build:
       context: ../services/scraper
       dockerfile: ../../infrastructure/dev/arachne.Dockerfile
@@ -63,6 +65,7 @@ services:
   # Arachne UI - Next.js dev server with Turbopack
   web:
     container_name: arachne-web-dev
+    restart: unless-stopped
     build:
       context: ../services/web
       dockerfile: Dockerfile.dev
@@ -85,6 +88,10 @@ services:
     ports:
       - "3002:3002"
 
+  # Redis (from base compose) - add restart policy for dev
+  redis:
+    restart: unless-stopped
+
   # Redis Commander - disabled by default, enable with --profile monitoring
   redis-commander:
     profiles: ["monitoring"]
@@ -92,6 +99,7 @@ services:
   # Nginx - reverse proxy for all services
   nginx:
     container_name: arachne-nginx-dev
+    restart: unless-stopped
     volumes:
       # Paths relative to CWD (infrastructure/), not to this file
       - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
