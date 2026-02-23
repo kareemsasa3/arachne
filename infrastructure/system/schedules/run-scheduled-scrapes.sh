@@ -6,7 +6,17 @@ SCRAPE_ENDPOINT="${BASE_URL}/api/arachne/scrape"
 SITES_FILE="${ARACHNE_SITES_FILE:-/opt/arachne/infrastructure/system/schedules/sites.txt}"
 
 command -v curl >/dev/null 2>&1 || { echo "[ERR] curl missing" >&2; exit 1; }
-command -v python >/dev/null 2>&1 || { echo "[ERR] python missing" >&2; exit 1; }
+
+# Pick a Python interpreter (macOS usually has python3, not python)
+PYTHON_BIN="${PYTHON_BIN:-python}"
+if ! command -v "$PYTHON_BIN" >/dev/null 2>&1; then
+  if command -v python3 >/dev/null 2>&1; then
+    PYTHON_BIN="python3"
+  else
+    echo "[ERR] python missing" >&2
+    exit 1
+  fi
+fi
 
 if [[ ! -f "$SITES_FILE" ]]; then
   echo "[ERR] Sites file not found: $SITES_FILE" >&2
@@ -56,7 +66,7 @@ fi
 export ARACHNE_URLS
 ARACHNE_URLS="$(printf "%s\n" "${urls[@]}")"
 
-payload="$(python - <<'PY'
+payload="$("$PYTHON_BIN" - <<'PY'
 import json, os
 urls = [u for u in os.environ["ARACHNE_URLS"].splitlines() if u.strip()]
 print(json.dumps({"urls": urls}))
@@ -90,7 +100,7 @@ body="$(cat "$tmp_out" 2>/dev/null || true)"
 
 if [[ "$resp_code" == "202" ]]; then
   job_id="$(
-python - <<'PY'
+"$PYTHON_BIN" - <<'PY'
 import json, os
 import sys
 from pathlib import Path
