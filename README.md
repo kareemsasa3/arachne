@@ -50,7 +50,7 @@ This setup orchestrates the following services:
 2. **Access the applications:**
    - **Arachne Web Interface**: http://localhost/
    - **AI API**: http://localhost/api/ai/
-   - **Scraper API**: http://localhost/api/scrape/
+   - **Scraper API**: http://localhost/api/arachne/
    - **Redis Commander**: http://localhost/redis/
    - **Health Check**: http://localhost/health
 
@@ -70,17 +70,37 @@ This setup orchestrates the following services:
   - `POST /api/ai/process` - AI processing
 
 ### Scraper (Web Scraping)
-- **URL**: http://localhost/api/scrape/
+- **URL**: http://localhost/api/arachne/
 - **Internal**: http://scraper:8080
 - **Endpoints**:
-  - `POST /scrape` - Submit scraping job
-  - `GET /scrape/status?id=<job_id>` - Check job status
+  - `POST /api/arachne/scrape` - Submit scraping job
+  - `GET /api/arachne/scrape/status?id=<job_id>` - Check job status
   - `GET /health` - Health check
   - `GET /metrics` - Prometheus metrics
+
+### Scraper API
+- `POST /api/arachne/scrape` - Accepts `{ "urls": ["https://example.com"] }`
+- `GET /api/arachne/scrape/status?id=<job_id>`
+- `GET /api/arachne/memory/*`
+- `GET /memory/*` - Direct passthrough to the scraper service
 
 ### Redis Commander
 - **URL**: http://localhost/redis/
 - **Purpose**: Web UI for Redis management
+
+## 💾 Persistence Model
+
+- Scraper snapshots are stored in SQLite at `/app/data/snapshots.db`
+- SQLite persistence is backed by the Docker volume `scraper_data`
+- Redis data also persists via a Docker volume
+
+## 🧭 Routing Model
+
+- Nginx is the single entry point and routes requests by path prefix
+- `/api/arachne` → scraper
+- `/memory` → scraper
+- `/api/ai` → AI
+- `/` → web
 
 ## 🔧 Configuration
 
