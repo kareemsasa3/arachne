@@ -71,7 +71,7 @@ services:
       context: ../services/scraper
       dockerfile: Dockerfile
     container_name: arachne-scraper
-    # Chrome requires adequate shared memory for rendering
+    user: "0:0"
     shm_size: '2gb'
     environment:
       - SCRAPER_REDIS_ADDR=${SCRAPER_REDIS_ADDR:-redis:6379}
@@ -90,6 +90,9 @@ services:
       - SCRAPER_RATE_LIMIT=${SCRAPER_RATE_LIMIT:-2}
       - SCRAPER_RATE_LIMIT_WINDOW=${SCRAPER_RATE_LIMIT_WINDOW:-1s}
       - SCRAPER_API_TOKEN=${SCRAPER_API_TOKEN:-}
+      - SCRAPER_DB_PATH=/app/data/snapshots.db
+    volumes:
+      - scraper_data:/app/data
     depends_on:
       redis:
         condition: service_healthy
@@ -131,5 +134,6 @@ networks:
     driver: bridge
 
 volumes:
+  scraper_data:
   redis_data:
     driver: local
