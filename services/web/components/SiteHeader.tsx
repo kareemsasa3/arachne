@@ -14,6 +14,7 @@ const links = [
 
 export default function SiteHeader() {
   const pathname = usePathname();
+  const isChatRoute = pathname?.startsWith('/chat');
 
   const isActive = (href: string) =>
     href === '/'
@@ -21,7 +22,9 @@ export default function SiteHeader() {
       : pathname === href || pathname.startsWith(`${href}/`);
 
   return (
-    <header className="sticky top-0 z-20 border-b border-white/10 bg-transparent backdrop-blur-md supports-[backdrop-filter]:backdrop-blur-md">
+    <header
+      className={`${isChatRoute ? 'hidden md:block' : 'block'} sticky top-0 z-20 border-b border-white/10 bg-transparent backdrop-blur-md supports-[backdrop-filter]:backdrop-blur-md`}
+    >
       <div className="mx-auto flex max-w-6xl items-center justify-between gap-4 px-4 py-3 md:px-6">
         <Link href="/" className="text-lg font-semibold text-white tracking-tight">
           Arachne
@@ -45,4 +48,3 @@ export default function SiteHeader() {
     </header>
   );
 }
-

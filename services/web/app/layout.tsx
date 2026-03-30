@@ -38,9 +38,9 @@ export default function RootLayout({
         className={`${geistSans.variable} ${geistMono.variable} antialiased relative bg-gray-900 text-gray-100`}
       >
         <SpiderWebBackground />
-        <div className="relative z-10 min-h-screen">
+        <div className="relative z-10 flex min-h-screen min-h-[100dvh] flex-col overflow-x-hidden">
           <SiteHeader />
-          {children}
+          <div className="flex min-h-0 flex-1 flex-col">{children}</div>
         </div>
         <ChatWidgetWrapper />
       </body>
