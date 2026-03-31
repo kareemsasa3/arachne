@@ -1,8 +1,8 @@
+name: arachne
 services:
   # Nginx reverse proxy
   nginx:
     image: nginx:alpine
-    container_name: arachne-nginx
     ports:
       - "${NGINX_HTTP_PORT:-80}:80"
       - "${NGINX_HTTPS_PORT:-443}:443"
@@ -23,7 +23,6 @@ services:
     build:
       context: ../services/web
       dockerfile: Dockerfile
-    container_name: arachne-web
     environment:
       - NODE_ENV=${WEB_NODE_ENV:-production}
       - PORT=${WEB_PORT:-3000}
@@ -44,7 +43,6 @@ services:
     build:
       context: ../services/ai
       dockerfile: Dockerfile
-    container_name: arachne-ai
     environment:
       - NODE_ENV=${AI_NODE_ENV:-production}
       - PORT=${AI_PORT:-3001}
@@ -70,7 +68,6 @@ services:
     build:
       context: ../services/scraper
       dockerfile: Dockerfile
-    container_name: arachne-scraper
     user: "0:0"
     shm_size: '2gb'
     environment:
@@ -103,7 +100,6 @@ services:
   # Redis - Required by Arachne for job storage
   redis:
     image: redis:7-alpine
-    container_name: arachne-redis
     volumes:
       - redis_data:/data
     command: redis-server --appendonly yes --maxmemory ${REDIS_MAX_MEMORY:-512mb} --maxmemory-policy ${REDIS_MAX_MEMORY_POLICY:-allkeys-lru}
@@ -120,7 +116,6 @@ services:
   redis-commander:
     image: rediscommander/redis-commander:latest
     platform: linux/amd64
-    container_name: arachne-redis-commander
     environment:
       - REDIS_HOSTS=local:redis:${REDIS_PORT:-6379}
     depends_on:
