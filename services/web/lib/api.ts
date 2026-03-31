@@ -32,3 +32,12 @@ export async function apiFetch(path: string, options?: RequestInit): Promise<Res
   return fetch(apiUrl(path), options);
 }
 
+export function isJsonContentType(contentType: string | null): boolean {
+  return contentType?.toLowerCase().includes('application/json') ?? false;
+}
+
+export function toBodyPreview(body: string, maxLength = 160): string {
+  const normalized = body.replace(/\s+/g, ' ').trim();
+  if (!normalized) return '';
+  return normalized.length > maxLength ? `${normalized.slice(0, maxLength - 3)}...` : normalized;
+}
