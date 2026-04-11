@@ -74,7 +74,7 @@ if [ "$1" = "--with-monitoring" ] || [ "$1" = "-m" ]; then
     docker compose -f docker-compose.yml -f prod/docker-compose.prod.yml -f prod/docker-compose.monitoring.prod.yml up -d
     echo "✅ Monitoring stack started!"
     echo "   • Prometheus: http://localhost:9090"
-    echo "   • Grafana: http://localhost:3000 (admin/admin)"
+    echo "   • Grafana: http://localhost:3000 (use GRAFANA_ADMIN_USER / GRAFANA_ADMIN_PASSWORD)"
 fi
 
 # Wait for services to be healthy using readiness loop

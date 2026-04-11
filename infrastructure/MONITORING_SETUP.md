@@ -77,7 +77,7 @@ infrastructure/
 
 2. **Access the monitoring tools:**
    - Prometheus: http://localhost:9090
-   - Grafana: http://localhost:3000 (admin/admin)
+   - Grafana: http://localhost:3000 (`GRAFANA_ADMIN_USER` / `GRAFANA_ADMIN_PASSWORD`)
 
 ### Production Environment
 
@@ -89,7 +89,7 @@ infrastructure/
 
 2. **Access the monitoring tools:**
    - Prometheus: http://your-domain:9090
-   - Grafana: http://your-domain:3000 (admin/admin)
+   - Grafana: http://your-domain:3000 (`GRAFANA_ADMIN_USER` / `GRAFANA_ADMIN_PASSWORD`)
 
 ## 📊 Metrics Collected
 
@@ -177,13 +177,15 @@ The Prometheus configuration (`monitoring/prometheus/prometheus.yml`) defines:
 Grafana is automatically configured with:
 - Prometheus as the default data source
 - Dashboard provisioning from the `dashboards/` directory
-- Admin user setup (admin/admin)
+- Admin user setup from `GRAFANA_ADMIN_USER` / `GRAFANA_ADMIN_PASSWORD`
 
 ### Environment Variables
 
 Key environment variables for monitoring:
 - `DOMAIN_NAME` - Used for Grafana URL configuration
 - `DOCKER_NETWORK_NAME` - Network name for service communication
+- `GRAFANA_ADMIN_USER` - Required Grafana admin username
+- `GRAFANA_ADMIN_PASSWORD` - Required Grafana admin password
 
 ## 🛠️ Management Commands
 
