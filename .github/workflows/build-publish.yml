@@ -63,7 +63,7 @@ jobs:
 
       - name: Scan ai image with Trivy (local)
         if: github.ref != 'refs/heads/main' && github.ref != 'refs/heads/master'
-        uses: aquasecurity/trivy-action@v0.33.1
+        uses: aquasecurity/trivy-action@57a97c7
         with:
           scan-type: image
           image-ref: ai:ci
@@ -73,7 +73,7 @@ jobs:
 
       - name: Scan ai image with Trivy (remote)
         if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master'
-        uses: aquasecurity/trivy-action@v0.33.1
+        uses: aquasecurity/trivy-action@57a97c7
         with:
           scan-type: image
           image-ref: ghcr.io/${{ github.repository }}/ai:${{ github.sha }}
@@ -137,7 +137,7 @@ jobs:
 
       - name: Scan scraper image with Trivy (local)
         if: github.ref != 'refs/heads/main' && github.ref != 'refs/heads/master'
-        uses: aquasecurity/trivy-action@v0.33.1
+        uses: aquasecurity/trivy-action@57a97c7
         with:
           scan-type: image
           image-ref: scraper:ci
@@ -147,7 +147,7 @@ jobs:
 
       - name: Scan scraper image with Trivy (remote)
         if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master'
-        uses: aquasecurity/trivy-action@v0.33.1
+        uses: aquasecurity/trivy-action@57a97c7
         with:
           scan-type: image
           image-ref: ghcr.io/${{ github.repository }}/scraper:${{ github.sha }}
@@ -212,7 +212,7 @@ jobs:
 
       - name: Scan web image with Trivy (local)
         if: github.ref != 'refs/heads/main' && github.ref != 'refs/heads/master'
-        uses: aquasecurity/trivy-action@v0.33.1
+        uses: aquasecurity/trivy-action@57a97c7
         with:
           scan-type: image
           image-ref: web:ci
@@ -222,7 +222,7 @@ jobs:
 
       - name: Scan web image with Trivy (remote)
         if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master'
-        uses: aquasecurity/trivy-action@v0.33.1
+        uses: aquasecurity/trivy-action@57a97c7
         with:
           scan-type: image
           image-ref: ghcr.io/${{ github.repository }}/web:${{ github.sha }}
