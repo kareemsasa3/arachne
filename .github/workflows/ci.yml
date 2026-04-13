@@ -67,7 +67,7 @@ jobs:
           docker build -t web:scan ./services/web
 
       - name: Scan ai with Trivy
-        uses: aquasecurity/trivy-action@0.24.0
+        uses: aquasecurity/trivy-action@0.33.1
         with:
           image-ref: "ai:scan"
           format: "table"
@@ -75,7 +75,7 @@ jobs:
           ignore-unfixed: true
 
       - name: Scan scraper with Trivy
-        uses: aquasecurity/trivy-action@0.24.0
+        uses: aquasecurity/trivy-action@0.33.1
         with:
           image-ref: "scraper:scan"
           format: "table"
@@ -83,7 +83,7 @@ jobs:
           ignore-unfixed: true
 
       - name: Scan web with Trivy
-        uses: aquasecurity/trivy-action@0.24.0
+        uses: aquasecurity/trivy-action@0.33.1
         with:
           image-ref: "web:scan"
           format: "table"
