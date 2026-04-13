@@ -236,6 +236,28 @@ For production deployment:
 
 For detailed deployment instructions, see [Environment Setup Guide](infrastructure/ENVIRONMENT_SETUP.md).
 
+## System Deploy (Erebus)
+
+`scripts/deploy-system.sh` syncs this repo into the live stack on Erebus and restarts it. It is a manual path — no CI/CD involved.
+
+**Prerequisites:** `scripts/install-system.sh` must have been run at least once to set up `/opt/arachne`, `/etc/arachne/`, and `arachne.service`.
+
+```bash
+# Preview what would change (no writes):
+sudo ./scripts/deploy-system.sh --dry-run
+
+# Deploy:
+sudo ./scripts/deploy-system.sh
+```
+
+The script:
+1. Checks that all git submodules (`services/ai`, `services/scraper`) are populated in the source tree. If not, it tells you to run `git submodule update --init --recursive` and exits.
+2. `rsync`s the repo into `/opt/arachne`, excluding `.git`, `node_modules`, `.next`, `dist`, `build`, `.env`, and `.vscode`.
+3. Does **not** touch `/etc/arachne/` (runtime config) or `/var/lib/arachne/` (scraper data).
+4. Writes the deployed git SHA and timestamp to `/opt/arachne/.deploy-revision` so you can always answer "what's live right now?".
+5. Restarts `arachne.service` (which rebuilds and recreates containers). This is synchronous for the `Type=oneshot` unit — the restart command blocks until the service has fully settled.
+6. Checks `systemctl status`, `docker ps`, and polls the `/health` endpoint with retries.
+
 ## 📝 Troubleshooting
 
 ### Common Issues
